@@ -19,16 +19,20 @@ typedef unsigned __int8 uint8_t;
 
 #include "location.hh"
 
-namespace tac {
+namespace tac
+{
 	struct Symbol;
 	class SymbolTable;
 
-	struct Type {
+	struct Type
+	{
 	public:
-		enum Kind {
-			CHAR,
-			INT,
-			FLOAT
+		enum Kind
+		{
+			CHAR  = 0,
+			INT   = 1,
+			FLOAT = 2,
+			ADDR  = 3
 		};
 
 		Kind kind; // the language type
@@ -67,9 +71,11 @@ namespace tac {
 		void init(const Type& other);
 	};
 
-	struct Symbol {
+	struct Symbol
+	{
 	public:
-		enum Kind {
+		enum Kind
+		{
 			LABEL,
 			VAR,
 			CONST,
@@ -77,7 +83,8 @@ namespace tac {
 			PARAM
 		};
 
-		union Value {
+		union Value
+		{
 			uint addrval;
 			int ival;
 			char cval;
@@ -112,7 +119,8 @@ namespace tac {
 		std::string to_str() const;
 	};
 
-	class SymbolTable {
+	class SymbolTable
+	{
 	public:
 		/**
 		 * @brief Creates a new symbol table with no parent table.
@@ -121,38 +129,60 @@ namespace tac {
 
 		virtual ~SymbolTable();
 
+		void end_var_section();
+
 		/**
 		 * @brief Inserts or updates a symbol in the table.
 		 *
 		 * If the old symbol is different than the new symbol, the old symbol is deleted.
 		 * This symbol will be marked as registered.
-		 *
-		 * @param symbol The symbol to be inserted.
 		 */
-		void put(Symbol *symbol);
+		void put(Symbol*);
 
 		/**
 		 * @brief Looks up for a symbol in the table.
 		 *
 		 * @param id The symbol unique id.
+		 *
 		 * @return A pointer to the symbol or null, if it's not found.
 		 */
-		virtual const Symbol* get(const std::string& id) const;
+		const Symbol* get(const std::string& id) const;
 
-		static std::string* unique_id(float f);
+		uint get_addr(const std::string& id) const;
 
-		static std::string* unique_id(int i);
+		const Symbol* get(uint) const;
+
+		uint next_addr() const;
+
+		void show() const;
+
+		static std::string* unique_id(float);
+
+		static std::string* unique_id(int);
 
 
 	private:
-		typedef std::map<std::string, const Symbol*> map_t;
-		typedef std::pair<std::string, const Symbol*> pair_t;
+		struct AddressedElement
+		{
+		public:
+			const Symbol *symbol;
+			uint base;
+			size_t size;
+
+			AddressedElement(const Symbol*, uint, size_t);
+
+			uint next_addr() const;
+		};
+
+		typedef std::map<std::string, uint> map_t;
+		typedef std::pair<std::string, uint> pair_t;
+		typedef std::vector<AddressedElement> addr_list_t;
+		int m_last_var_index;
 
 		map_t m_table;
+		addr_list_t m_list;
 
 		SymbolTable(const SymbolTable&);
-
-		void put(map_t& map, Symbol* symbol);
 	};
 }
 

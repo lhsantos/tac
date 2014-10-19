@@ -25,8 +25,10 @@
 			tac::Parser::semantic_type* yylval, \
 			tac::Parser::location_type* yylloc)
 
-namespace tac {
-	class Scanner: public yyFlexLexer {
+namespace tac
+{
+	class Scanner: public yyFlexLexer
+	{
 	public:
 		Scanner(std::istream *in);
 

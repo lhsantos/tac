@@ -9,15 +9,21 @@
 #define ERROR_HPP_ 1
 
 #include <ostream>
+#include <exception>
+#include "location.hh"
 
-namespace tac {
-	enum ErrorLevel {
+
+namespace tac
+{
+	enum ErrorLevel
+	{
 		INFO,
 		WARNING,
 		ERROR
 	};
 
-	class Error {
+	class Error
+	{
 	public:
 		Error(
 			ErrorLevel level,
@@ -30,7 +36,7 @@ namespace tac {
 
 		ErrorLevel errorLevel() const;
 
-		void print(std::ostream& out) const;
+		void print(std::ostream&) const;
 
 	private:
 		ErrorLevel level;
@@ -38,6 +44,23 @@ namespace tac {
 		std::string file;
 		int line;
 		int col;
+	};
+
+
+	class TACException : public std::exception
+	{
+	public:
+		TACException(const position&) throw();
+
+		virtual ~TACException() throw();
+
+		operator Error() const;
+
+		virtual const std::string msg() const = 0;
+
+
+	protected:
+		const position pos;
 	};
 }
 

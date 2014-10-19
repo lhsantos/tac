@@ -12,14 +12,16 @@
 
 
 namespace tac {
-	Error::Error(ErrorLevel level, const std::string& msg, const std::string& file, int line, int col)
-			: level(level), msg(msg), file(file), line(line), col(col) {}
+	Error::Error(ErrorLevel level, const std::string &msg, const std::string &file, int line, int col)
+			: level(level), msg(msg), file(file), line(line), col(col) { }
 
-	Error::~Error() {}
+	Error::~Error() { }
 
-	void Error::print(std::ostream& out) const {
+	void Error::print(std::ostream& out) const
+	{
 		/* Prints the level of the error. */
-		switch (level) {
+		switch (level)
+		{
 			case INFO:
 				out << "info:";
 				break;
@@ -33,9 +35,11 @@ namespace tac {
 				break;
 		}
 
-		if (file.size() > 0) {
+		if (file.size() > 0)
+		{
 			out << " " << file.c_str();
-			if (line > 0) {
+			if (line > 0)
+			{
 				out << "(" << line;
 				if (col > 0)
 					out << "," << col;
@@ -47,7 +51,20 @@ namespace tac {
 		out << " " << msg.c_str();
 	}
 
-	ErrorLevel Error::errorLevel() const {
+	ErrorLevel Error::errorLevel() const
+	{
 		return level;
+	}
+
+
+
+
+	TACException::TACException(const position& pos) throw()
+			: pos(pos) { }
+
+	TACException::~TACException() throw() { }
+
+	TACException::operator Error() const {
+		return Error(ERROR, msg(), *pos.filename, pos.line, pos.column);
 	}
 }

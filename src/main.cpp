@@ -11,28 +11,45 @@
 #include <cstdlib>
 #include <list>
 
-#include "error.hpp"
+#include "getopt.h"
+
 #include "interpreter.hpp"
 
 using namespace tac;
 
-void process(const int argc, const char **argv, std::list<Error>& errors) {
-	Interpreter i;
+int main(const int argc, char **argv)
+{
+	static struct option long_options[] =
+	{
+		{ "verbose", no_argument, 0, 'v' },
+		{ "brief",	 no_argument, 0, 'b' },
+		{ "debug",	 no_argument, 0, 'd' },
+		{ "step",	 no_argument, 0, 's' },
+		{ 0, 0, 0, 0 }
+	};
 
-	if (argc != 2) {
-		errors.push_back(Error(ERROR, "no input file provided"));
-		return;
-	}
-
-	i.run(argv[1], errors);
-}
-
-int main(const int argc, const char **argv) {
 	std::list<Error> errors;
 	int actualErrors = 0;
+	uint8_t opts = 0;
 
-	process(argc, argv, errors);
+	int c;
+	while ((c = getopt_long(argc, argv, "vbds", long_options, 0)) != -1)
+	{
+		switch (c) {
+		case 0: break;
+		case 'v': opts |= Interpreter::VERBOSE; break;
+		case 'b': opts &= (~Interpreter::VERBOSE); break;
+		case 'd': opts |= Interpreter::DEBUG; break;
+		case 's': opts |= Interpreter::STEP; break;
+		case '?':
+		default:
+			std::cerr << "option '" << (char) optopt << "' is invalid: ignored" << std::endl;
+			break;
+		}
+	}
 
+	Interpreter i(opts);
+	i.run(argv[optind], errors);
 	if (errors.size() > 0) {
 		for (std::list<Error>::iterator i = errors.begin(); i != errors.end(); ++i) {
 			i->print(std::cerr);

@@ -3,8 +3,9 @@
 	#include <cmath>
 	
 	#include "scanner.hpp"
+	#include "interpreter.hpp"
 
-	#define YY_NO_UNISTD_H
+	//#define YY_NO_UNISTD_H
 	
 	typedef tac::Parser::token token;
 	
@@ -80,6 +81,7 @@ WS  [ \t\v\f]
 "jump"					{ yylloc->columns(yyleng); return token::JUMP; }
 "param"					{ yylloc->columns(yyleng); return token::PARAM; }
 "print"					{ yylloc->columns(yyleng); return token::PRINT; }
+"println"					{ yylloc->columns(yyleng); return token::PRINTLN; }
 "call"					{ yylloc->columns(yyleng); return token::CALL; }
 "return"				{ yylloc->columns(yyleng); return token::RETURN; }
 "push"					{ yylloc->columns(yyleng); return token::PUSH; }
@@ -88,6 +90,8 @@ WS  [ \t\v\f]
 {L}{A}*					{ yylloc->columns(yyleng); yylval->sval = new std::string(yytext); return token::IDENTIFIER; }
 
 "$"{D}+						{ yylloc->columns(yyleng); yylval->ival = strtol(yytext + 1, 0, 10); return token::TEMPORARY; }
+"$s"						{ yylloc->columns(yyleng); yylval->ival = Interpreter::STACK_REG_CODE; return token::SP_TEMPORARY; }
+"$f"						{ yylloc->columns(yyleng); yylval->ival = Interpreter::FRAME_REG_CODE; return token::SP_TEMPORARY; }
 "#"{D}+						{ yylloc->columns(yyleng); yylval->ival = strtol(yytext + 1, 0, 10); return token::PARAMETER; }
 
 {HP}{H}+{IS}?				{ yylloc->columns(yyleng); yylval->ival = strtol(yytext, 0, 16); return token::I_CONSTANT; }

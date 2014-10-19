@@ -13,12 +13,13 @@
 #include <sstream>
 #include <iomanip>
 
-namespace tac {
+namespace tac
+{
 	Field::Field(const Symbol* s)
 		: kind(s ? s->kind : Symbol::VAR),
 		  type((s && s->type) ? s->type->kind : Type::CHAR),
-		  solved(false) {
-
+		  solved(false)
+	{
 		value.referee = s;
 	}
 
@@ -26,13 +27,14 @@ namespace tac {
 		: kind(other.kind),
 		  type(other.type),
 		  value(other.value),
-		  solved(other.solved) {
-
+		  solved(other.solved)
+	{
 		if ((!other.solved) && other.value.referee && (!other.value.referee->registered))
 			value.referee = new Symbol(*other.value.referee);
 	}
 
-	Field& Field::operator=(const Field& other) {
+	Field& Field::operator=(const Field& other)
+	{
 		kind = other.kind;
 		type = other.type;
 		value = other.value;
@@ -44,12 +46,14 @@ namespace tac {
 		return *this;
 	}
 
-	Field::~Field() {
+	Field::~Field()
+	{
 		if ((!solved) && value.referee && (!value.referee->registered))
 			delete value.referee;
 	}
 
-	bool Field::solve(const SymbolTable &table) {
+	bool Field::solve(const SymbolTable &table)
+	{
 		if (solved)
 			return true;
 		if (!value.referee)
@@ -57,7 +61,8 @@ namespace tac {
 
 		const Symbol *s;
 
-		switch (value.referee->kind) {
+		switch (value.referee->kind)
+		{
 		case Symbol::VAR:
 		case Symbol::LABEL:
 			s = table.get(*value.referee->id);
@@ -66,13 +71,12 @@ namespace tac {
 				delete value.referee;
 
 			kind = s->kind;
+			if (s->type)
+				type = s->type->kind;
 			if (kind == Symbol::LABEL)
 				value.addrval = s->value.addrval;
-			else {
+			else
 				value.referee = s;
-				if (s->type)
-					type = s->type->kind;
-			}
 			break;
 
 		case Symbol::PARAM:
@@ -89,12 +93,14 @@ namespace tac {
 			kind = s->kind;
 			type = s->type->kind;
 
-			switch (type) {
+			switch (type)
+			{
 			case Type::CHAR:
 				value.cval = s->value.cval;
 				break;
 
 			case Type::INT:
+			case Type::ADDR:
 				value.ival = s->value.ival;
 				break;
 
@@ -112,29 +118,36 @@ namespace tac {
 		return true;
 	}
 
-	std::string Field::to_str() const {
+	std::string Field::to_str() const
+	{
 		std::ostringstream sstream;
 
-		if (solved) {
-			switch (kind) {
+		if (solved)
+		{
+			switch (kind)
+			{
 			case Symbol::VAR:
-				sstream << "var " << *value.referee->id;
+				sstream << *value.referee->id;
 				break;
 
 			case Symbol::LABEL:
-				sstream << "addr " << value.addrval;
+				sstream
+					<< "0x"
+					<< std::noshowbase << std::hex << std::setw(8) << std::setfill('0')
+					<< (int) value.addrval;
 				break;
 
 			case Symbol::PARAM:
-				sstream << "param " << value.addrval;
+				sstream << "#" << value.addrval;
 				break;
 
 			case Symbol::TEMP:
-				sstream << "temp " << value.addrval;
+				sstream << "$" << value.addrval;
 				break;
 
 			case Symbol::CONST:
-				switch (type) {
+				switch (type)
+				{
 				case Type::CHAR:
 					sstream << "'";
 					if (value.cval < 32)
@@ -145,6 +158,7 @@ namespace tac {
 					break;
 
 				case Type::INT:
+				case Type::ADDR:
 					sstream << value.ival;
 					break;
 
@@ -156,81 +170,91 @@ namespace tac {
 			}
 		}
 		else if (value.referee)
-			 sstream << "refs " << value.referee->to_str();
+			 sstream << "ref " << value.referee->to_str();
 
 		return sstream.str();
 	}
 
 
 
-	const uint8_t Instruction::ADD		= 0x01;
-	const uint8_t Instruction::SUB		= 0x02;
-	const uint8_t Instruction::MUL		= 0x03;
-	const uint8_t Instruction::DIV		= 0x04;
-	const uint8_t Instruction::AND		= 0x05;
-	const uint8_t Instruction::OR		= 0x06;
-	const uint8_t Instruction::BAND		= 0x07;
-	const uint8_t Instruction::BOR		= 0x08;
-	const uint8_t Instruction::BXOR		= 0x09;
-	const uint8_t Instruction::SHL		= 0x0A;
-	const uint8_t Instruction::SHR		= 0x0B;
-
-	const uint8_t Instruction::SEQ		= 0x20;
-	const uint8_t Instruction::SLT		= 0x21;
-	const uint8_t Instruction::SLEQ		= 0x22;
-
-	const uint8_t Instruction::MINUS	= 0x30;
-	const uint8_t Instruction::NOT		= 0x31;
-	const uint8_t Instruction::BNOT		= 0x32;
-
-	const uint8_t Instruction::CHTOINT	= 0x41;
-	const uint8_t Instruction::CHTOFL	= 0x42;
-	const uint8_t Instruction::INTTOFL	= 0x43;
-	const uint8_t Instruction::INTTOCH	= 0x44;
-	const uint8_t Instruction::FLTOINT	= 0x45;
-	const uint8_t Instruction::FLTOCH	= 0x46;
-
-	const uint8_t Instruction::MOVVV	= 0x50;
-	const uint8_t Instruction::MOVVD	= 0x51;
-	const uint8_t Instruction::MOVVA	= 0x52;
-	const uint8_t Instruction::MOVVI	= 0x53;
-	const uint8_t Instruction::MOVDV	= 0x54;
-	const uint8_t Instruction::MOVDD	= 0x55;
-	const uint8_t Instruction::MOVDA	= 0x56;
-	const uint8_t Instruction::MOVDI	= 0x57;
-	const uint8_t Instruction::MOVIV	= 0x58;
-	const uint8_t Instruction::MOVID	= 0x59;
-	const uint8_t Instruction::MOVIA	= 0x5A;
-
-	const uint8_t Instruction::BRZ		= 0x60;
-	const uint8_t Instruction::BRNZ		= 0x61;
-	const uint8_t Instruction::JUMP		= 0x62;
-	const uint8_t Instruction::PARAM	= 0x63;
-	const uint8_t Instruction::PRINT	= 0x64;
-	const uint8_t Instruction::CALL		= 0x65;
-	const uint8_t Instruction::RETURN	= 0x66;
-	const uint8_t Instruction::PUSH		= 0x67;
-	const uint8_t Instruction::POP		= 0x68;
-
-	Instruction::Instruction(uint8_t opcode, Symbol *p0, Symbol *p1, Symbol *p2)
-			: opcode(opcode) {
+	Instruction::Instruction(const location& loc, OpCode opcode, Symbol *p0, Symbol *p1, Symbol *p2)
+			: loc(loc), opcode(opcode)
+	{
 		operands[0] = Field(p0);
 		operands[1] = Field(p1);
 		operands[2] = Field(p2);
 	}
 
-	std::string Instruction::to_str() const {
+	std::string Instruction::to_str() const
+	{
 		std::ostringstream sstream;
 
-		sstream << std::hex << (int) opcode;
+		sstream << opname(opcode);
 
 		if (operands[0].solved)
-			sstream << ", " << operands[0].to_str();
+			sstream << " " << operands[0].to_str();
 		if (operands[1].solved)
 			sstream << ", " << operands[1].to_str();
 		if (operands[2].solved)
 			sstream << ", " << operands[2].to_str();
 
 		return sstream.str();
+	}
+
+	std::string Instruction::opname(uint8_t op)
+	{
+		switch (op)
+		{
+		case ADD:	  return "add";
+		case SUB:	  return "sub";
+		case MUL:	  return "mul";
+		case DIV:	  return "div";
+		case AND:	  return "and";
+		case OR:	  return "or";
+		case MINUS:	  return "minus";
+		case NOT:	  return "not";
+		case SEQ:	  return "seq";
+		case SLT:	  return "slt";
+		case SLEQ:	  return "sleq";
+		case BAND:	  return "band";
+		case BOR:	  return "bor";
+		case BXOR:	  return "bxor";
+		case SHL:	  return "shl";
+		case SHR:	  return "shr";
+		case BNOT:	  return "bnot";
+		case CHTOINT: return "chtoint";
+		case CHTOFL:  return "chtofl";
+		case INTTOCH: return "inttoch";
+		case INTTOFL: return "inttofl";
+		case FLTOCH:  return "fltoch";
+		case FLTOINT: return "fltoint";
+		case MOVVV:	  return "movvv";
+		case MOVVD:	  return "movvd";
+		case MOVVA:	  return "movva";
+		case MOVVI:	  return "movvi";
+		case MOVDV:	  return "movdv";
+		case MOVDD:	  return "movdd";
+		case MOVDA:	  return "movda";
+		case MOVDI:	  return "movdi";
+		case MOVIV:	  return "moviv";
+		case MOVID:	  return "movid";
+		case MOVIA:	  return "movia";
+		case POP:	  return "pop";
+		case BRZ:	  return "brz";
+		case BRNZ:	  return "brnz";
+		case JUMP:	  return "jump";
+		case PARAM:	  return "param";
+		case PRINT:	  return "print";
+		case PRINTLN: return "println";
+		case CALL: 	  return "call";
+		case RETURN:  return "return";
+		case PUSH:	  return "push";
+		default:
+			std::ostringstream s;
+			s << "0x"
+				<< std::noshowbase << std::hex << std::setw(2) << std::setfill('0')
+				<< (int) op;
+			return s.str();
+		}
 	}
 }

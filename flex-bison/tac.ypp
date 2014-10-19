@@ -31,7 +31,7 @@
 	Type *type;
 	Symbol *symbol;
 	std::vector<Symbol*> *symbol_list;
-	uint8_t opcode;
+	Instruction::OpCode opcode;
 	Instruction* instr;
 	std::vector<Instruction*> *instr_list;
 };
@@ -40,11 +40,13 @@
 %parse-param { Scanner& scanner }
 %parse-param { SymbolTable* table }
 %parse-param { std::vector<Instruction*>*& instructions }
+%parse-param { uint& start_address }
 %parse-param { std::string file }
 %parse-param { std::list<tac::Error>& errors }
 
 %token	<sval>		IDENTIFIER "identifier"
 %token  <ival>		TEMPORARY "temp_ref"
+%token  <ival>		SP_TEMPORARY "special reg"
 %token  <ival>		PARAMETER "param_ref"
 %token	<ival>		I_CONSTANT "integer constant"
 %token	<cval>		C_CONSTANT "char constant"
@@ -58,7 +60,7 @@
 %token ADD SUB MUL DIV AND OR BAND BOR BXOR SHL SHR SEQ SLT SLEQ
 %token MINUS NOT BNOT CHTOINT CHTOFL INTTOFL INTTOCH FLTOINT FLTOCH BRZ BRNZ
 %token MOV
-%token JUMP PARAM PRINT CALL RETURN PUSH POP
+%token JUMP PARAM PRINT PRINTLN CALL RETURN PUSH POP
 %token EOL
 
 %type <symbol> symbol
@@ -73,6 +75,7 @@
 %type <instr_list> instruction_list
 %type <instr> instruction
 %type <instr> cmd
+%type <symbol> addressable
 %type <symbol> target
 %type <symbol> operand
 %type <instr> binary_operation
@@ -129,13 +132,13 @@
 %%
 
 tac_program:
-	table_block code_block { instructions = $2; }
+	table_block code_block { instructions = $2; start_address = table->next_addr(); }
 	| code_block { instructions = $1; }
 ;
 
 
 table_block:
-	TABLE symbol_list
+	TABLE symbol_list { table->end_var_section(); g_program_counter = table->next_addr(); }
 ;
 
 
@@ -181,7 +184,11 @@ symbol:
 		
 		if (s && size) {
 			s->type->array_size = (size_t) size->value.ival;
-			s->value.arrval = 0;
+			s->value.arrval = new std::vector<Symbol*>();
+			for (uint i = 0; i < s->type->array_size; ++i)
+				s->value.arrval->push_back(
+					new Symbol(SymbolTable::unique_id(0), @$, Symbol::VAR, new Type(*s->type))
+				);
 			$$ = s;
 		}
 		else
@@ -214,7 +221,7 @@ symbol:
 		
 		if (s && size && init) {
 			if (s->type->kind == init->back()->type->kind) {
-				if (size->value.ival == init->size()) {
+				if (size->value.ival == (int) init->size()) {
 					s->type->array_size = (size_t) size->value.ival;
 					s->value.arrval = init;
 					$$ = s;
@@ -257,7 +264,6 @@ constant:
 	
 	| C_CONSTANT {
 		$$ = make_char_const($1, @1);
-		$$->value.cval = $1;
 	}
 	
 	| F_CONSTANT {
@@ -350,7 +356,7 @@ instruction:
 
 label:
 	IDENTIFIER ':' empty_lines {
-		Symbol *s = new Symbol($1, @1, Symbol::LABEL);
+		Symbol *s = new Symbol($1, @1, Symbol::LABEL, new Type(Type::ADDR));
 		s->value.addrval = g_program_counter;
 		
 		if (register_symbol(s, errors))
@@ -378,14 +384,8 @@ cmd:
 	| ret
 ;
 
-
-target:
+addressable:
 	IDENTIFIER { $$ = new Symbol($1, @1, Symbol::VAR); }
-	
-	| TEMPORARY {
-		$$ = new Symbol(SymbolTable::unique_id((int) ($1)), @1, Symbol::TEMP);
-		$$->value.addrval = $1;
-	}
 	
 	| PARAMETER {
 		$$ = new Symbol(SymbolTable::unique_id((int) ($1)), @1, Symbol::PARAM);
@@ -393,15 +393,31 @@ target:
 	}
 	;
 
+	
+target:
+	addressable { $$ = $1; }
+
+	| TEMPORARY {
+		$$ = new Symbol(SymbolTable::unique_id((int) ($1)), @1, Symbol::TEMP);
+		$$->value.addrval = $1;
+	}
+	;
+
 
 operand:
 	target
+	
+	| SP_TEMPORARY {
+		$$ = new Symbol(SymbolTable::unique_id((int) ($1)), @1, Symbol::TEMP);
+		$$->value.addrval = $1;
+	}
+	
 	| constant
 	;
 
 	
 binary_operation:
-	binary_opname target ',' operand ',' operand { $$ = new Instruction($1, $2, $4, $6); }
+	binary_opname target ',' operand ',' operand { $$ = new Instruction(@$, $1, $2, $4, $6); }
 	;
 
 
@@ -423,7 +439,7 @@ binary_opname:
 	;
 
 unary_operation:
-	unary_opname target ',' operand { $$ = new Instruction($1, $2, $4); }
+	unary_opname target ',' operand { $$ = new Instruction(@$, $1, $2, $4); }
 	;
 
 unary_opname:
@@ -441,39 +457,53 @@ unary_opname:
 	;
 
 assignment:
-	MOV target ',' operand { $$ = new Instruction(Instruction::MOVVV, $2, $4); }
-	| MOV target ',' '*' target { $$ = new Instruction(Instruction::MOVVD, $2, $5); }
-	| MOV target ',' '&' target { $$ = new Instruction(Instruction::MOVVA, $2, $5); }
-	| MOV target ',' target '[' operand ']' { $$ = new Instruction(Instruction::MOVVI, $2, $4, $6); }
-	| MOV '*' target ',' operand { $$ = new Instruction(Instruction::MOVDV, $3, $5); }
-	| MOV '*' target ',' '*' target { $$ = new Instruction(Instruction::MOVDD, $3, $6); }
-	| MOV '*' target ',' '&' target { $$ = new Instruction(Instruction::MOVDA, $3, $6); }
-	| MOV '*' target ',' target '[' operand ']' { $$ = new Instruction(Instruction::MOVDI, $3, $5, $7); }
-	| MOV target '[' operand ']' ',' operand { $$ = new Instruction(Instruction::MOVIV, $2, $4, $7); }
-	| MOV target '[' operand ']' ',' '*' target { $$ = new Instruction(Instruction::MOVID, $2, $4, $8); }
-	| MOV target '[' operand ']' ',' '&' target { $$ = new Instruction(Instruction::MOVIA, $2, $4, $8); }
+	MOV target ',' operand { $$ = new Instruction(@$, Instruction::MOVVV, $2, $4); }
+	| MOV target ',' '*' target { $$ = new Instruction(@$, Instruction::MOVVD, $2, $5); }
+	| MOV target ',' '&' addressable { $$ = new Instruction(@$, Instruction::MOVVA, $2, $5); }
+	| MOV target ',' target '[' operand ']' { $$ = new Instruction(@$, Instruction::MOVVI, $2, $4, $6); }
+	| MOV '*' target ',' operand { $$ = new Instruction(@$, Instruction::MOVDV, $3, $5); }
+	| MOV '*' target ',' '*' target { $$ = new Instruction(@$, Instruction::MOVDD, $3, $6); }
+	| MOV '*' target ',' '&' addressable { $$ = new Instruction(@$, Instruction::MOVDA, $3, $6); }
+	| MOV '*' target ',' target '[' operand ']' { $$ = new Instruction(@$, Instruction::MOVDI, $3, $7, $5); }
+	| MOV target '[' operand ']' ',' operand { $$ = new Instruction(@$, Instruction::MOVIV, $2, $7, $4); }
+	| MOV target '[' operand ']' ',' '*' target { $$ = new Instruction(@$, Instruction::MOVID, $2, $8, $4); }
+	| MOV target '[' operand ']' ',' '&' addressable { $$ = new Instruction(@$, Instruction::MOVIA, $2, $8, $4); }
 	;
 
 single_operand_cmd:
-	JUMP target { $$ = new Instruction(Instruction::JUMP, $2); }
-	| PARAM operand { $$ = new Instruction(Instruction::PARAM, $2); }
-	| PRINT operand { $$ = new Instruction(Instruction::PRINT, $2); }
-	| PUSH operand { $$ = new Instruction(Instruction::PUSH, $2); }
-	| POP operand { $$ = new Instruction(Instruction::POP, $2); }
+	JUMP operand { $$ = new Instruction(@$, Instruction::JUMP, $2); }
+	| PARAM operand { $$ = new Instruction(@$, Instruction::PARAM, $2); }
+	| PRINT operand { $$ = new Instruction(@$, Instruction::PRINT, $2); }
+	| PRINTLN { $$ = new Instruction(@$, Instruction::PRINTLN); }
+	| PRINTLN operand { $$ = new Instruction(@$, Instruction::PRINTLN, $2); }
+	| PUSH operand { $$ = new Instruction(@$, Instruction::PUSH, $2); }
+	| POP target { $$ = new Instruction(@$, Instruction::POP, $2); }
 	;
 
 call:
-	CALL target ',' I_CONSTANT {
-		Symbol *s = new Symbol(SymbolTable::unique_id($4), @4, Symbol::CONST, new Type(Type::INT));
-		s->value.ival = $4;
-		$$ = new Instruction(Instruction::CALL, $2, s);
+	CALL operand {
+		Symbol *s = new Symbol(SymbolTable::unique_id(0), @2, Symbol::CONST, new Type(Type::INT));
+		s->value.ival = 0;
+		$$ = new Instruction(@$, Instruction::CALL, $2, s);
+	}
+	
+	| CALL operand ',' I_CONSTANT {
+		$$ = 0;
+		
+		if ($4 >= 0) {
+			Symbol *s = new Symbol(SymbolTable::unique_id($4), @4, Symbol::CONST, new Type(Type::INT));
+			s->value.ival = $4;
+			$$ = new Instruction(@$, Instruction::CALL, $2, s);
+		}
+		else
+			ON_ERROR("parameter count must be a non-negative number", @4.begin);
 	}
 	;
 
 
 ret:
-	RETURN { $$ = new Instruction(Instruction::RETURN); }
-	| RETURN operand { $$ = new Instruction(Instruction::RETURN, $2); }
+	RETURN { $$ = new Instruction(@$, Instruction::RETURN); }
+	| RETURN operand { $$ = new Instruction(@$, Instruction::RETURN, $2); }
 	;
 
 
@@ -512,8 +542,9 @@ static int yylex(
 Symbol* make_char_const(char c, const location &loc) {
 	std::string *id =
 			(c >= 32) ? new std::string(std::string() + c) : SymbolTable::unique_id((int) c);
-	
-	return new Symbol(id, loc, Symbol::CONST, new Type(Type::CHAR));
+	Symbol *s = new Symbol(id, loc, Symbol::CONST, new Type(Type::CHAR));
+	s->value.cval = c;
+	return s;
 }
 
 std::vector<Symbol*>* make_char_array(std::string *str, const location &loc) {
