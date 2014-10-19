@@ -84,24 +84,24 @@ namespace tac
 			SHR		= 0x14,
 			BNOT	= 0x15,
 
-			CHTOINT	= 0x20, // 0000
-			CHTOFL	= 0x22, // 0010
-			INTTOCH	= 0x24, // 0100
-			INTTOFL	= 0x26, // 0110
-			FLTOCH	= 0x28, // 1000
-			FLTOINT	= 0x29, // 1001
+			CHTOINT	= 0x20, // ...0000
+			CHTOFL	= 0x22, // ...0010
+			INTTOCH	= 0x24, // ...0100
+			INTTOFL	= 0x26, // ...0110
+			FLTOCH	= 0x28, // ...1000
+			FLTOINT	= 0x29, // ...1001
 
-			MOVVV	= 0x30, // 0000
-			MOVVD	= 0x31, // 0001
-			MOVVA	= 0x32, // 0010
-			MOVVI	= 0x33, // 0011
-			MOVDV	= 0x34, // 0100
-			MOVDD	= 0x35, // 0101
-			MOVDA	= 0x36, // 0110
-			MOVDI	= 0x37, // 0111
-			MOVIV	= 0x3C, // 1100
-			MOVID	= 0x3D, // 1101
-			MOVIA	= 0x3E, // 1110
+			MOVVV	= 0x30, // ...0000
+			MOVVD	= 0x31, // ...0001
+			MOVVA	= 0x32, // ...0010
+			MOVVI	= 0x33, // ...0011
+			MOVDV	= 0x34, // ...0100
+			MOVDD	= 0x35, // ...0101
+			MOVDA	= 0x36, // ...0110
+			MOVDI	= 0x37, // ...0111
+			MOVIV	= 0x3C, // ...1100
+			MOVID	= 0x3D, // ...1101
+			MOVIA	= 0x3E, // ...1110
 
 			POP		= 0x40,
 

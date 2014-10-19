@@ -331,7 +331,7 @@ namespace tac
 		{
 			const Instruction &i = m_program.at(m_program_counter - m_code_start);
 
-			if (m_options & DEBUG)
+			if (m_options & STEP)
 			{
 				std::cout
 					<< std::noshowbase << std::hex << std::setw(6) << std::setfill('0')
@@ -339,24 +339,22 @@ namespace tac
 				std::cout << ": " << i.to_str() << std::endl;
 			}
 
-			if (i.opcode < 0x10)
-				general_logic_arithmetic(i);
-			else if (i.opcode < 0x20)
-				integer_logic_arithmetic(i);
-			else if (i.opcode < 0x30)
-				casting(i);
-			else if (i.opcode < 0x40)
-				move(i);
-			else
-				branch_and_function(i);
+			switch (i.opcode & 0xF0)
+			{
+			case 0x00: general_logic_arithmetic(i); break;
+			case 0x10: integer_logic_arithmetic(i); break;
+			case 0x20: casting(i); break;
+			case 0x30: move(i); break;
+			default: branch_and_function(i); break;
+			}
 		}
 	}
 
 	void Interpreter::warning(const location &loc, const std::string &msg)
 	{
 		Error e(WARNING, msg, *loc.begin.filename, loc.begin.line, loc.begin.column);
-		e.print(std::cerr);
-		std::cerr << std::endl;
+		e.print(std::cout);
+		std::cout << std::endl;
 	}
 
 	void Interpreter::general_logic_arithmetic(const Instruction &i)
@@ -364,9 +362,7 @@ namespace tac
 		const Field &target = i.operands[0];
 
 		Type::Kind type = get_type(i.operands[1], i.loc);
-		if (target.kind == Symbol::TEMP)
-			get_symbol(target, i.loc)->type->kind = type;
-		else
+		if (target.kind != Symbol::TEMP)
 			type = get_type(target, i.loc);
 
 		for (int j = 1; (j < 3) && i.operands[j].solved; ++j)
@@ -584,6 +580,9 @@ namespace tac
 			break;
 		}
 
+		if (target.kind == Symbol::TEMP)
+			get_symbol(target, i.loc)->type->kind = type;
+
 		++m_program_counter;
 	}
 
@@ -595,7 +594,7 @@ namespace tac
 		if (type != Type::INT)
 		{
 			if (target.kind == Symbol::TEMP)
-				type = get_symbol(target, i.loc)->type->kind = Type::INT;
+				type = Type::INT;
 			else
 				warning(i.loc, "target of integer operation is not an integer");
 		}
@@ -632,20 +631,21 @@ namespace tac
 			break;
 		}
 
+		if (target.kind == Symbol::TEMP)
+			type = get_symbol(target, i.loc)->type->kind = Type::INT;
+
 		++m_program_counter;
 	}
 
 	void Interpreter::casting(const Instruction &i)
 	{
 		Type::Kind target_t = (Type::Kind) (i.opcode & 0x03);
-		Type::Kind source_t = (Type::Kind) (i.opcode & 0x0C >> 2);
+		Type::Kind source_t = (Type::Kind) ((i.opcode & 0x0C) >> 2);
 		const Field &target = i.operands[0];
 		const Field &source = i.operands[1];
 
 		Type::Kind type = target_t;
-		if (target.kind == Symbol::TEMP)
-			get_symbol(target, i.loc)->type->kind = target_t;
-		else
+		if (target.kind != Symbol::TEMP)
 			type = get_type(target, i.loc);
 
 		if (type != target_t)
@@ -701,13 +701,16 @@ namespace tac
 			break;
 		}
 
+		if (target.kind == Symbol::TEMP)
+			get_symbol(target, i.loc)->type->kind = target_t;
+
 		++m_program_counter;
 	}
 
 	void Interpreter::move(const Instruction &i)
 	{
-		uint8_t tgt_mode = (i.opcode & 0x03);
-		uint8_t src_mode = (i.opcode & 0x0C >> 2);
+		uint8_t src_mode = i.opcode & 0x03;
+		uint8_t tgt_mode = (i.opcode & 0x0C) >> 2;
 
 		const Field &tgt_op = i.operands[0];
 		Symbol* tgt_sym = get_symbol(i.operands[0], i.loc);
@@ -730,7 +733,7 @@ namespace tac
 			if (get_type(src_op, i.loc) != Type::ADDR)
 				warning(i.loc, "dereferencing a non-pointer value");
 			{
-				uint addr = src_op.value.addrval;
+				uint addr = get_val(src_op, i.loc).addrval;
 				if (src_mode == 3)
 				{
 					const Field &offset = i.operands[2];
@@ -765,7 +768,7 @@ namespace tac
 		{
 			if (get_type(tgt_op, i.loc) != Type::ADDR)
 				warning(i.loc, "dereferencing a non-pointer value");
-			uint addr = tgt_op.value.addrval;
+			uint addr = get_val(tgt_op, i.loc).addrval;
 			if (tgt_mode == 3)
 			{
 				const Field &offset = i.operands[2];

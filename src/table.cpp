@@ -103,6 +103,32 @@ namespace tac {
 		delete type;
 	}
 
+	static void printval(std::ostringstream &s, Symbol::Value v, Type *t) {
+		switch (t->kind)
+		{
+		case Type::INT:
+			s << v.ival;
+			break;
+
+		case Type::CHAR:
+			s << "'";
+			if (v.cval < 32)
+				s << "\\" << (int) v.cval;
+			else
+				s << v.cval;
+			s << "'";
+			break;
+
+		case Type::FLOAT:
+			s << v.fval;
+			break;
+
+		case Type::ADDR:
+			s << v.addrval;
+			break;
+		}
+	}
+
 	std::string Symbol::to_str() const
 	{
 		std::ostringstream s;
@@ -141,36 +167,15 @@ namespace tac {
 			{
 				s << '[';
 				for (size_t i = 0; i < type->array_size - 1; ++i)
-					s << value.arrval->at(i)->to_str() << ", ";
-				s << value.arrval->back()->to_str();
+				{
+					printval(s, value.arrval->at(i)->value, value.arrval->at(i)->type);
+					s << ", ";
+				}
+				printval(s, value.arrval->back()->value, value.arrval->back()->type);
 				s << ']';
 			}
 			else
-			{
-				switch (type->kind)
-				{
-				case Type::INT:
-					s << value.ival;
-					break;
-
-				case Type::CHAR:
-					s << "'";
-					if (value.cval < 32)
-						s << "\\" << (int) value.cval;
-					else
-						s << value.cval;
-					s << "'";
-					break;
-
-				case Type::FLOAT:
-					s << value.fval;
-					break;
-
-				case Type::ADDR:
-					s << value.addrval;
-					break;
-				}
-			}
+				printval(s, value, type);
 		}
 
 		if ((kind == PARAM) || (kind == TEMP))
@@ -217,7 +222,7 @@ namespace tac {
 		}
 		else
 		{
-			AddressedElement e = m_list[i->second];
+			AddressedElement &e = m_list[i->second];
 			if (e.symbol != symbol)
 			{
 				delete e.symbol;

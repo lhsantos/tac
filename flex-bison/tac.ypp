@@ -138,7 +138,8 @@ tac_program:
 
 
 table_block:
-	TABLE symbol_list { table->end_var_section(); g_program_counter = table->next_addr(); }
+	EOL table_block
+	| TABLE symbol_list { table->end_var_section(); g_program_counter = table->next_addr(); }
 ;
 
 
