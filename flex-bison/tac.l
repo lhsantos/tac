@@ -1,6 +1,7 @@
 %{
 	#include <string>
 	#include <cmath>
+	#include <stdint.h>
 	
 	#include "scanner.hpp"
 	#include "interpreter.hpp"

@@ -6,6 +6,7 @@ IDIR=./include
 SDIR=./src
 LYDIR=./flex-bison
 ODIR=./obj
+BDIR=./bin
 SODIR=$(ODIR)/src
 LYODIR=$(ODIR)/flex-bison
 CFLAGS=-I$(IDIR) -I$(LYDIR) -O3 -c
@@ -23,8 +24,7 @@ all: mkdirs tac
 
 clean:
 	rm -f $(LYDIR)/*.cpp $(LYDIR)/*.hh $(LYDIR)/*.hpp $(LYDIR)/*.output
-	rm -rf $(LYODIR) $(SODIR) $(ODIR)
-	rm -f *.exe tac
+	rm -rf $(LYODIR) $(SODIR) $(ODIR) $(BDIR)
 
 $(LYDIR)/parser.cpp: $(LYDIR)/tac.ypp
 	$(YACC) -Wall -v -o $@ $<
@@ -42,7 +42,7 @@ $(SODIR)/%.o: $(SDIR)/%.cpp
 	$(CC) $(CFLAGS) -o $@ $<
 
 mkdirs:
-	$(MKDIR) -p $(ODIR) $(SODIR) $(LYODIR)
+	$(MKDIR) -p $(BDIR) $(ODIR) $(SODIR) $(LYODIR)
 
 tac: $(LY_OBJS) $(OBJS)
-	$(CC) -o $@ $^
+	$(CC) -o $(BDIR)/tac $^

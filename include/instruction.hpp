@@ -12,6 +12,7 @@
 
 #include <list>
 #include <string>
+#include <stdint.h>
 
 #include "table.hpp"
 

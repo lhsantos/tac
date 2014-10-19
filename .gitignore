@@ -26,6 +26,7 @@
 *.exe
 *.out
 *.app
+/bin
 /obj
 /.externalToolBuilders
 /.cproject

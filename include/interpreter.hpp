@@ -12,11 +12,13 @@
 
 #include <list>
 #include <vector>
+#include <stdint.h>
 
 #include "error.hpp"
 #include "scanner.hpp"
 #include "table.hpp"
 #include "parser.hpp"
+#include "instruction.hpp"
 
 
 namespace tac
