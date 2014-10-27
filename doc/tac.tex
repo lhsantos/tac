@@ -1,0 +1,887 @@
+\documentclass[12pt,a4paper,extrafontsizes,article]{memoir}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[numbers]{natbib}
+\usepackage{url}
+\bibliographystyle{plainnat}
+\renewcommand\bibname{Bibliografia}
+\renewcommand*\contentsname{Sumário}
+\renewcommand*\listtablename{Lista de Tabelas}
+\renewcommand*\tablename{Tabela}
+\usepackage{comment}
+\usepackage{memsty}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\usepackage{titlepages}  % code of the example titlepages
+\usepackage{memlays}     % extra layout diagrams
+\usepackage{dpfloat}     % floats on facing pages
+\usepackage{fonttable}[2009/04/01]   % font tables
+%%%%\usepackage{xr-hyper} \externaldocument{memdesign} Doesn't work, 
+%%%%                      Idea won't work in general for memman/memdesin
+%%%%                      as at display time, who knows where everything
+%%%%                      will be located on the individual's computer.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%% Change section heading styles
+%%%\memmansecheads
+
+%%%% Use the built-in division styling
+\headstyles{bringhurst}
+
+%%% ToC down to subsections
+\settocdepth{subsubsection}
+%%% Numbering down to subsections as well
+\setsecnumdepth{subsection}
+
+%% end preamble
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%#% extend
+
+\usepackage[draft]{fixme}
+\fxsetup{
+  layout=marginnote
+}
+ 
+
+\newcommand*{\srcfont}{\fontfamily{pcr}\selectfont}
+
+\begin{document}
+
+\frontmatter
+\pagestyle{empty}
+
+% title page
+\vspace*{\fill}
+\begin{center}
+\HUGE{TAC}\par
+\Large{Interpretador de Código de Três Endereços}\par
+\LARGE{Manual de Referência}\par
+\vspace*{\fill}
+\large{por Luciano Santos}\par
+\bigskip
+\normalsize{}\par
+\medskip
+\normalsize{Ref. Versão 0.1}\par
+\end{center}
+
+
+\clearpage
+
+% ToC, etc
+%%%\pagenumbering{roman}
+\pagestyle{headings}
+%%%%\pagestyle{Ruled}
+
+\tableofcontents
+\clearpage
+\listoftables
+\clearpage
+
+\pagenumbering{arabic}
+\mainmatter
+
+%\renewcommand*{\printchapternum}{}
+
+\chapter{Introdução}
+
+\section{Objetivo}
+
+Este manual de referência técnica documenta o programa \textit{TAC} (\textit{Three Address Code}), um interpretador de
+código de três endereços baseado no código de alto nivel de \citeauthor{Aho:1986:CPT:6448}. Este interpretador tem fins
+puramente didáticos, foi projetado para utilização no contexto de uma disciplina de tradudores/compiladores, no nível de
+graduação.
+
+O código de três endereços reconhecido pelo TAC é Turing completo e pode naturalmente ser utilizado como código
+intermediário para a geração de código de máquina, no entanto, continua sendo um código de alto nível, com as seguintes
+características básicas:
+\begin{itemize}
+  \item toda instrução recebe até três operandos, que podem ser endereços, referências à tabela de símbolos,
+  símbolos temporários ou constantes;
+  \item o código manipula \textit{símbolos}, não memória ou variáveis fortemente tipadas, de tal maneira que as
+  operações são bastante flexíveis, e assumem que o código interpretado foi gerado corretamente, emitindo
+  \textit{warnings} quando possível;
+  \item o código manipula \textit{endereços simbólicos}, não endereços reais, ou mesmo endereços relativos ou virtuais,
+  isso significa que, em modo de interpretação, todos os endereços têm significado apenas para o interpretador e devem
+  ser evitadas referências a endereços por meio de constantes ou operações aritméticas.
+\end{itemize}
+
+\section{Notação}
+
+Ao longo deste manual, as seguinte convenções serão seguidas:
+\begin{itemize}
+  \item termos novos introduzidos pela primeira vez, nomes de programas e palavras estrangeiras ele virão em
+  \textit{itálico};
+  \item comandos a serem executados no \textit{prompt}, nomes de arquivos e diretórios, nomes de opções da linha de
+  comando, exemplos de código fonte e regras de sintaxe virão em fonte {\srcfont monoespaço};
+  \item valores a serem substituídos pelo usuário, tais como parâmetros e arquivos de entrada, serão indicados entre os
+  sinais {\srcfont <} e {\srcfont >} e virão em {\srcfont \textit{<itálico>}};
+  \item valores opcionais (que podem ser fornecidos ou não) serão indicados entre os sinais {\srcfont [} e
+  {\srcfont ]}, {\srcfont[desse jeito]};
+  \item caracteres que fizerem parte de regras sintáticas virão entre aspas simples, como em {\srcfont '['}.
+\end{itemize}
+
+\clearpage
+\chapter{Invocando o interpretador}
+
+TAC é um projeto de \textit{software} livre, distribuído sob a \textit{Apache License Version 2.0}, de
+janeiro de 2004, com código fonte disponível em \url{https://github.com/lhsantos/tac}. Ele é compatível com
+ambientes Linux e foi testado em ambientes Mac OS e Windows+Cygwin\footnote{http://www.cygwin.com/}.
+
+As seções a seguir descrevem o processo de compilação e invocação do executável do TAC.
+
+\section{Compilando o TAC}
+
+Para compilar o TAC, são necessários os programas \textit{flex}, \textit{bison}, \textit{g++} e \textit{make}.
+
+Após obter o código fonte por meio do \textit{site} ou via {\srcfont git}\footnote{http://git-scm.com/}, abra uma linha
+de comando no sistema operacional e mova o diretório corrente para a raiz do código fonte (onde estão os arquivos
+{\srcfont LICENSE} e {\srcfont Makefile}). Para compilar e gerar o executável do tac, faça:
+
+\bigskip
+{\srcfont make all}
+\bigskip
+
+Este comando vai criar (se não existirem) os subdiretórios {\srcfont obj} e {\srcfont bin}, gerar arquivos objeto
+intermediários em {\srcfont obj} e o executável final em {\srcfont bin}. Caso deseje apagar todos os arquivos gerados no
+processo de compilação, faça:
+
+\bigskip
+{\srcfont make clean}
+
+
+\section{Linha de comando do TAC}
+
+O executável do TAC é um programa de linha de comando, que deve ser invocado da seguinte maneira:
+
+\bigskip
+{\srcfont tac [opções] \textit{<entrada>}}
+\bigskip
+
+A entrada deve ser um arquivo de texto com um programa TAC válido, que, por convenção, deve ter a extensão
+\textit{.tac}.
+
+É possível definir as seguintes opções na linha de comando:
+
+\begin{table}
+\centering
+\caption{Opções da linha de comando}
+\label{tab:cmdlineopts}
+\begin{tabular}{| l | l |} \toprule
+Opção & Descrição\\ \midrule
+{\srcfont -v, -{}-verbose} & \parbox{0.7\linewidth}{ativa o modo loquaz, que mostra na saída detalhes de cada etapa da
+execução do interpretador}\\ \midrule
+{\srcfont -b, -{}-brief} & \parbox{0.7\linewidth}{desativa o modo loquaz}\\ \midrule
+{\srcfont -d, -{}-debug} & \parbox{0.7\linewidth}{ativa o modo de depuração, que mostra a tabela de símbolos e uma lista
+das instruções com todas as referências simbólicas resolvidas, antes de iniciar a execução}\\ \midrule
+{\srcfont -s, -{}-step} & \parbox{0.7\linewidth}{ativa o modo passo a passo, que mostra a instrução atual sendo
+executada para cada iteração do programa}\\ \bottomrule
+\end{tabular}
+\end{table}
+
+Se os modos loquaz, de depuração, ou passo a passo estiverem ativados, recomenda-se redirecionar a saída do
+interpretador para um arquivo de texto, da seguinte maneira:
+
+\bigskip
+{\srcfont tac -vds \textit{<entrada>} > out.txt}
+
+
+\clearpage
+\chapter{Arquivo de Entrada}
+
+Um arquivo \textit{tac} é composto por duas seções: \textit{table} e \textit{code}. A seção \textit{table} é opcional e,
+se presente, é utilizada para declarar uma tabela de símbolos.
+
+Espaços e linhas em branco são ignoradas. Ao longo de todo o documento, são aceitos (e ignorados) comentários no estilo
+C, de uma linha, i.e., na forma:
+
+\bigskip
+{\srcfont // isto é um comentário{\color{red}\char`\\n}}.
+\bigskip
+
+Os comentários podem vir ao final de qualquer linha do arquivo, inclusive ocupando uma linha própria.
+
+As seções a seguir descrevem em detalhes a sintaxe das duas seções de um arquivo \textit{tac}.
+
+\section{Tabela de Símbolos}
+
+A seção \textit{table} é formada pelo marcador {\srcfont .table} seguido de zero ou mais \textit{definições de
+símbolo}, uma por linha. Uma definição de símbolo é da forma:
+
+\bigskip
+{\srcfont\scriptsize \textit{<tipo>} \textit{<nome>} ['['\textit{<tamanho do vetor>}']'] ['='
+\textit{<inicializador>}]\color{red}{\char`\\n}}
+\bigskip
+
+O \textit{tipo} de um símbolo pode ser {\srcfont char}, {\srcfont int} ou {\srcfont float}, respectivamente, caracteres,
+números inteiros e números de ponto flutuante. Se definido, \textit{tamanho do vetor} deve ser um número inteiro maior que zero
+ou vazio -- {\srcfont []}, caso em que um \textit{inicializador de vetor} é obrigatório.
+
+O inicializador pode ser \textit{simples}, i.e., uma constante inteira, um literal de caractere ou uma constante de
+ponto flutuante; ou pode ser um inicializador de vetor, que é uma lista de constantes do mesmo tipo, entre chaves --
+{\srcfont \{} e {\srcfont \}}, separadas por vírgula {\srcfont ','}. Inicializadores simples
+seguem a mesma sintaxe que a linguagem ANSI C.
+
+Não são realizadas conversões implícitas para os inicializadores: um inicializador deve ser exatamente do mesmo tipo que
+seu símbolo, isto é, símbolos inteiros devem ser inicializados por uma constante inteira, vetores de caracteres devem
+ser inicializados com inicializadores de vetor com literais de caractere, e assim por diante. Inicializadores de vetor
+devem ter o mesmo número de elementos que o tamanho de vetor, se declarado.
+
+Um caso especial de inicializador é um \textit{literal de string} -- caracteres entre aspas duplas, que é um
+\textit{syntactic sugar} para inicializador de vetor de literal de caracteres.
+
+Os nomes dos símbolos devem ser identificadores ANSI C únicos, não é permitido que dois símbolos tenham o mesmo nome.
+
+As seguinte entrada é uma tabela de símbolos válida:\\
+
+{\srcfont
+\noindent{\color{green!50!black}// exemplo de tabela de simbolos}\\
+{\color{gray}.table}\\
+{\color{blue}int} n = {\color{orange}5}\\
+{\color{blue}int} m = {\color{orange}0xCAFEBABE}\\
+{\color{blue}char} c = {\color{orange}'A'}\\
+{\color{blue}float} f = {\color{orange}5.3f}\\
+{\color{blue}int} vetor[] = \{{\color{orange}1}, {\color{orange}2}, {\color{orange}3}, {\color{orange}5}\}\\
+{\color{blue}float} vf[4] = \{{\color{orange}1f}, {\color{orange}2.0}, {\color{orange}.3}, {\color{orange}5F}\}\\
+{\color{blue}char} \_char\_array[] = \{{\color{orange}'H'}, {\color{orange}'e'}, {\color{orange}'l'},
+{\color{orange}'l'}, {\color{orange}'o'}, {\color{orange}'\char`\\0'}\}\\
+{\color{blue}char} string1 [] = {\color{orange}"Hello world!"}
+}
+
+\section{Seção de Código}
+
+A seção \textit{code} é formada pelo marcador {\srcfont .code} seguido de zero ou mais \textit{instruções}, uma por
+linha. Uma instrução é da forma:
+
+\bigskip
+{\srcfont\scriptsize [rótulo] \textit{<nome>} [\textit{<parâmetro>}] [',' \textit{<parâmetro>}] [','
+\textit{<parâmetro>}]\color{red}{\char`\\n}}
+\bigskip
+
+Um rótulo é um identificador ANSI C seguido de {\srcfont ':'}. Um rótulo deve ser um identificador único no programa,
+não podendo dois rótulos diferentes ou um rótulo e um símbolo qualquer da tabela utilizarem o mesmo idenficador. Pode
+haver quebra de linhas e linhas em branco entre um rótulo e a instrução que vem logo em seguida. O rótulo especial
+{\srcfont main:} é utilizado para indicar o ponto de partida do programa.
+
+A sintaxe e a semântica de cada uma das instruções aceitas são descritas no Capítulo \ref{chp:instructions}. Apenas para
+ilustração, o trecho abaixo é um arquivo de entrada válido:\\
+
+{\srcfont
+\noindent{\color{green!50!black}// mostra um vetor na tela}\\
+{\color{gray}.table}\\
+{\color{blue}int} v[5] = \{{\color{orange}5}, {\color{orange}4}, {\color{orange}3}, {\color{orange}2},
+{\color{orange}1}\}\\
+{\color{blue}int} size = {\color{orange}5}\\
+{\color{gray}.code}\\
+{\color{red}main:}\\
+{\color{green!50!black}// \$0 = 0, \$1 = size - 1}\\
+{\color{violet}mov} \$0, {\color{orange}0}\\
+{\color{violet}sub} \$1, size, {\color{orange}1}\\
+{\color{green!50!black}// while \$0 < size}\\
+{\color{red}L1:}\\
+{\color{violet}slt} \$2, \$0, size\\
+{\color{violet}brz} L2, \$2\\
+{\color{green!50!black}// print v[\$0]}\\
+{\color{violet}mov} \$2, \&v\\
+{\color{violet}mov} \$2, \$2[\$0]\\
+{\color{violet}print} \$2\\
+{\color{green!50!black}// if \$0 < size - 1, print ", "}\\
+{\color{violet}slt} \$2, \$0, \$1\\
+{\color{violet}brz} L3, \$2\\
+{\color{violet}print} {\color{orange}','}\\
+{\color{violet}print} {\color{orange}' '}\\
+{\color{red}L3:}\\
+{\color{violet}add} \$0, \$0, {\color{orange}1}\\
+{\color{violet}jump} L1 {\color{green!50!black}// loop}\\
+{\color{red}L2:}\\
+{\color{violet}println}\\
+}
+
+
+\clearpage
+\chapter{Instruções}
+\label{chp:instructions}
+
+Para todas as instruções a seguir, valem as seguintes definições:
+\begin{enumerate}
+  \item Um \textbf{contexto} é uma abstração em tempo de execução para resolver \textit{parâmetros de função} e
+  \textit{temporários}. O programa sempre inicia sua execução no contexto raiz, e cada chamada de subrotina empilha um
+  novo contexto (desempilhado quando a subrotina retorna). A pilha de execução (que também contém os parâmetros) é
+  global e cada contexto utiliza uma seção dela, porém os temporários são alocados separadamente e são exclusivos para
+  cada contexto.
+  
+  \item Um \textbf{parâmetro de função} é da forma {\srcfont \#\textit{n}}, onde \textit{n} é um inteiro não negativo.
+  Esta expressão indica o n-ésimo parâmetro empilhado no contexto de uma subrotina, iniciando em zero. Por exemplo, se
+  uma função é chamada com 3 parâmetros, então {\srcfont \#0} indica o primeiro parâmetro colocado na pilha, {\srcfont
+  \#1}, o segundo, e assim por diante.
+  
+  \item Um \textbf{temporário} é da forma {\srcfont \$\textit{n}}, onde \textit{n} é um inteiro não negativo.
+  Esta expressão indica o n-ésimo temporário alocado para o contexto atual, iniciando em zero. Por exemplo, {\srcfont
+  \$0} indica o primeiro temporário no contexto atual, {\srcfont \$1}, o segundo, e assim por diante. Os temporários
+  especiais {\srcfont \$s} e {\srcfont \$f} apontam sempre, respectivamente, para o topo da pilha global e para o início
+  da seção da pilha relativa ao contexto atual.
+  
+  \item Um \textbf{endereçável} é um elemento que possui endereço. Endereçáveis válidos podem ser parâmetros de função e
+  símbolos da tabela. Observe que um rótulo não é um endereçável, pois indica o endereço de uma instrução, mas não
+  tem um endereço próprio. Um rótulo é uma constante.
+  
+  \item Um \textbf{destino} é um elemento que pode receber valores. Destinos válidos são parâmetros de função, símbolos
+  e temporários.
+
+  \item Um \textbf{operando} é um elemento que contém valor. Operandos válidos são parâmetros de função, símbolos,
+  temporários, constantes e rótulos.
+\end{enumerate}
+
+Se uma instrução qualquer calcula valores e salva em um destino, a validade desta atribuição será verificada apenas em
+tempo de execução. Caso a expressão calculada seja de um tipo diferente do destino (e o destino não seja um temporário),
+um \textit{warning} será emitido. Temporários sempre passam a ter o tipo de qualquer expressão que recebam. Se o
+destino não for um temporário, a expressão será calculada por meio de conversão implícita para o tipo do destino.
+
+Os valores só são salvos no destino ao final da instrução, de tal modo que é possível referenciar o mesmo elemento tanto
+nos operandos como no destino.
+
+Por fim, o nome de um símbolo sempre se refere ao valor deste símbolo, não ao seu endereço. Na Seção \ref{sec:mov}, é
+definida a sintaxe para obter-se o endereço de um símbolo. O nome de um vetor refere-se ao valor do primeiro elemento de
+um vetor. O endereço de um vetor refere-se ao endereço do primeiro elemento de um vetor.
+
+\section{Lógico-aritméticas}
+
+Todas as instruções lógico-aritméticas são da forma:
+
+\bigskip
+{\srcfont\scriptsize \textit{<nome>} \textit{<destino>}, \textit{<operando>} [, \textit{<operando>}]}
+\bigskip
+
+Devem ser respeitadas as considerações sobre tipo feitas no início deste capítulo. A seguir, são descritas todas as
+instruções lógico-aritméticas.
+
+
+\subsection{\textbf{add}}
+
+\textit{sintaxe:}\\{\srcfont add \textit{<destino>}, \textit{<operando>}, \textit{<operando>}}
+
+\noindent \textit{semântica:}\\soma os dois operandos e atribui o resultado ao destino.
+
+
+\subsection{\textbf{sub}}
+
+\textit{sintaxe:}\\{\srcfont sub \textit{<destino>}, \textit{<operando\textsubscript{1}>},
+\textit{<operando\textsubscript{2}>}}
+
+\noindent \textit{semântica:}\\subtrai {\srcfont \textit{operando\textsubscript{2}}} de {\srcfont \textit{operando\textsubscript{1}}} e atribui o
+resultado ao destino.
+
+
+\subsection{\textbf{mul}}
+
+\textit{sintaxe:}\\{\srcfont mul \textit{<destino>}, \textit{<operando>}, \textit{<operando>}}
+
+\noindent \textit{semântica:}\\multiplica os dois operandos e atribui o resultado ao destino.
+
+
+\subsection{\textbf{div}}
+
+\textit{sintaxe:}\\{\srcfont div \textit{<destino>}, \textit{<operando\textsubscript{1}>},
+\textit{<operando\textsubscript{2}>}}
+
+\noindent \textit{semântica:}\\divide {\srcfont \textit{operando\textsubscript{1}}} por {\srcfont \textit{operando\textsubscript{2}}} e
+atribui o resultado ao destino.
+
+
+\subsection{\textbf{and}}
+
+\textit{sintaxe:}\\{\srcfont and \textit{<destino>}, \textit{<operando\textsubscript{1}>},
+\textit{<operando\textsubscript{2}>}}
+
+\noindent \textit{semântica:}\\se {\srcfont \textit{operando\textsubscript{1}}} é diferente de zero e {\srcfont
+\textit{operando\textsubscript{2}}} é diferente de zero, atribui {\srcfont 1} ao destino, caso contrário, atribui {\srcfont 0}.
+
+
+\subsection{\textbf{or}}
+
+\textit{sintaxe:}\\{\srcfont or \textit{<destino>}, \textit{<operando\textsubscript{1}>},
+\textit{<operando\textsubscript{2}>}}
+
+\noindent \textit{semântica:}\\se {\srcfont \textit{operando\textsubscript{1}}} é igual a zero e {\srcfont
+\textit{operando\textsubscript{2}}} é igual a zero, atribui {\srcfont 0} ao destino, caso contrário, atribui {\srcfont 1}.
+
+
+\subsection{\textbf{minus}}
+
+\textit{sintaxe:}\\{\srcfont minus \textit{<destino>}, \textit{<operando>}}
+
+\noindent \textit{semântica:}\\atribui a destino o valor do operando multiplicado por -1.
+
+
+\subsection{\textbf{not}}
+
+\textit{sintaxe:}\\{\srcfont not \textit{<destino>}, \textit{<operando>}}
+
+\noindent \textit{semântica:}\\se {\srcfont \textit{operando}} é igual a zero, atribui {\srcfont 1} ao destino, caso contrário, atribui
+{\srcfont 0}.
+
+
+\subsection{\textbf{band}}
+
+\textit{sintaxe:}\\{\srcfont band \textit{<destino>}, \textit{<operando>}, \textit{<operando>}}
+
+\noindent \textit{semântica:}\\os operandos serão lidos como inteiros, realiza a operação \textit{and} \textit{bit} a \textit{bit} entre os
+operandos e atribui o resultado ao destino.
+
+
+\subsection{\textbf{bor}}
+
+\textit{sintaxe:}\\{\srcfont bor \textit{<destino>}, \textit{<operando>}, \textit{<operando>}}
+
+\noindent \textit{semântica:}\\os operandos serão lidos como inteiros, realiza a operação \textit{or} \textit{bit} a \textit{bit} entre os
+operandos e atribui o resultado ao destino.
+
+
+\subsection{\textbf{bxor}}
+
+\textit{sintaxe:}\\{\srcfont bxor \textit{<destino>}, \textit{<operando>}, \textit{<operando>}}
+
+\noindent \textit{semântica:}\\os operandos serão lidos como inteiros, realiza a operação \textit{xor} \textit{bit} a \textit{bit} entre os
+operandos e atribui o resultado ao destino.
+
+
+\subsection{\textbf{shl}}
+
+\textit{sintaxe:}\\{\srcfont shl \textit{<destino>}, \textit{<operando\textsubscript{1}>},
+\textit{<operando\textsubscript{2}>}}
+
+\noindent \textit{semântica:}\\os operandos serão lidos como inteiros, move {\srcfont \textit{operando\textsubscript{1}}} {\srcfont
+\textit{operando\textsubscript{2}}} \textit{bits} à esquerda e atribui o resultado ao destino.
+
+
+\subsection{\textbf{shr}}
+
+\textit{sintaxe:}\\{\srcfont shr \textit{<destino>}, \textit{<operando\textsubscript{1}>},
+\textit{<operando\textsubscript{2}>}}
+
+\noindent \textit{semântica:}\\os operandos serão lidos como inteiros, move {\srcfont \textit{operando\textsubscript{1}}} {\srcfont
+\textit{operando\textsubscript{2}}} \textit{bits} à direita e atribui o resultado ao destino.
+
+
+\subsection{\textbf{bnot}}
+
+\textit{sintaxe:}\\{\srcfont bnot \textit{<destino>}, \textit{<operando>}}
+
+\noindent \textit{semântica:}\\o operando será lidos como um inteiro, realiza a operação \textit{not} \textit{bit} a \textit{bit} sobre o
+operando e atribui o resultado ao destino.
+
+
+\section{Relacionais}
+
+Todas as instruções relacionais são da forma:
+
+\bigskip
+{\srcfont\scriptsize \textit{<nome>} \textit{<destino>}, \textit{<operando\textsubscript{1}>},
+\textit{<operando\textsubscript{2}>}]}
+\bigskip
+
+Devem ser respeitadas as considerações sobre tipo feitas no início deste capítulo. A seguir, são descritas todas as
+instruções relacionais.
+
+
+\subsection{\textbf{seq}}
+
+\textit{sintaxe:}\\{\srcfont seq \textit{<destino>}, \textit{<operando\textsubscript{1}>},
+\textit{<operando\textsubscript{2}>}}
+
+\noindent \textit{semântica:}\\se {\srcfont \textit{operando\textsubscript{1}}} e {\srcfont\textit{operando\textsubscript{2}}} forem iguais,
+atribui {\srcfont 1} ao destino, caso contrário, atribui {\srcfont 0}.
+
+
+\subsection{\textbf{slt}}
+
+\textit{sintaxe:}\\{\srcfont slt \textit{<destino>}, \textit{<operando\textsubscript{1}>},
+\textit{<operando\textsubscript{2}>}}
+
+\noindent \textit{semântica:}\\se {\srcfont \textit{operando\textsubscript{1}}} for menor que {\srcfont\textit{operando\textsubscript{2}}},
+atribui {\srcfont 1} ao destino, caso contrário, atribui {\srcfont 0}.
+
+
+\subsection{\textbf{sleq}}
+
+\textit{sintaxe:}\\{\srcfont sleq \textit{<destino>}, \textit{<operando\textsubscript{1}>},
+\textit{<operando\textsubscript{2}>}}
+
+\noindent \textit{semântica:}\\se {\srcfont \textit{operando\textsubscript{1}}} for menor que ou igual a
+{\srcfont\textit{operando\textsubscript{2}}}, atribui {\srcfont 1} ao destino, caso contrário, atribui {\srcfont 0}.
+
+
+\section{Conversão de tipo}
+
+Todas as instruções de conversão de tipo são da forma:
+
+\bigskip
+{\srcfont\scriptsize \textit{<nome>} \textit{<destino>}, \textit{<operando>}}
+\bigskip
+
+O tipo de origem e o de destino serão verificados. Se o destino (desde que não seja um temporário) ou a origem forem de
+tipos diferentes dos esperados pelas instruções, um \textit{warning} será gerado. Os valores lidos que não estiverem
+no tipo de origem não são implicitamente convertidos, mas lidos no exato estado de seus \textit{bytes}.
+
+A seguir, são descritas todas as instruções de conversão de tipo.
+
+
+\subsection{\textbf{chtoint}}
+
+\textit{sintaxe:}\\{\srcfont chtoint \textit{<destino>}, \textit{<operando>}}
+
+\noindent \textit{semântica:}\\o operando será lido como um caractere, converte o valor do caractere para um inteiro e atribui ao destino.
+
+
+\subsection{\textbf{chtofl}}
+
+\textit{sintaxe:}\\{\srcfont chtofl \textit{<destino>}, \textit{<operando>}}
+
+\noindent \textit{semântica:}\\o operando será lido como um caractere, converte o valor do caractere para um número de ponto flutuante e
+atribui ao destino.
+
+
+\subsection{\textbf{inttoch}}
+
+\textit{sintaxe:}\\{\srcfont inttoch \textit{<destino>}, \textit{<operando>}}
+
+\noindent \textit{semântica:}\\o operando será lido como um inteiro, converte o valor do inteiro para um caractere (com possíveis perdas) e
+atribui ao destino.
+
+
+\subsection{\textbf{inttofl}}
+
+\textit{sintaxe:}\\{\srcfont inttofl \textit{<destino>}, \textit{<operando>}}
+
+\noindent \textit{semântica:}\\o operando será lido como um inteiro, converte o valor do inteiro para um número de ponto flutuante e atribui
+ao destino.
+
+
+\subsection{\textbf{fltoch}}
+
+\textit{sintaxe:}\\{\srcfont fltoch \textit{<destino>}, \textit{<operando>}}
+
+\noindent \textit{semântica:}\\o operando será lido como um número de ponto flutuante, converte a parte inteira do valor do número de ponto
+flutuante para um caractere (com possíveis perdas) e atribui ao destino.
+
+
+\subsection{\textbf{fltoint}}
+
+\textit{sintaxe:}\\{\srcfont fltoint \textit{<destino>}, \textit{<operando>}}
+
+\noindent \textit{semântica:}\\o operando será lido como um número de ponto flutuante, converte a parte inteira do valor do número de ponto
+flutuante para um inteiro (com possíveis perdas) e atribui ao destino.
+
+
+\section{Atribuição}
+\label{sec:mov}
+
+A instrução de atribuição -- {\srcfont mov} -- copia o valor de um operando em um destino. No entanto, existem várias
+versões desta intrução, que estão descritas na Tabela \ref{tab:mov}.
+
+É importante lembrar que as considerações sobre tipos feitas no início deste capítulo devem ser observadas.
+
+\begin{table}[H!]
+\centering
+\caption{Versões da instrução {\srcfont mov}}
+\label{tab:mov}
+\begin{tabular}{| l | l |} \toprule
+Sintaxe & Semântica\\ \midrule
+{\srcfont mov d, s} & \parbox{0.8\linewidth}{onde \textit{d} é um destino e \textit{s} é um operando, simplesmente
+copia o valor de \textit{s} para \textit{d}}\\ \midrule
+
+{\srcfont mov d, *s} & \parbox{0.8\linewidth}{onde tando \textit{d} quanto \textit{s} são destinos, trata
+\textit{s} como um endereço simbólico e atribui o valor do elemento apontado por este endereço a \textit{d}}\\ \midrule
+
+{\srcfont mov d, \&s} & \parbox{0.8\linewidth}{onde \textit{d} é um destino e \textit{s} é um endereçável,
+atribui o endereço simbólico de \textit{s} a \textit{d}}\\ \midrule
+
+{\srcfont mov d, s[i]} & \parbox{0.8\linewidth}{onde \textit{d} e \textit{s} são destinos, e \textit{i} é um operando,
+trata \textit{s} como um endereço simbólico e atribui o valor do elemento apontado por este endereço mais o deslocamento
+\textit{i} a \textit{d}}\\ \midrule
+
+{\srcfont mov *d, s} & \parbox{0.8\linewidth}{onde \textit{d} é um destino e \textit{s} é um operando,
+trata \textit{d} como um endereço simbólico e atribui ao elemento apontado por este endereço o valor \textit{s}}\\
+\midrule
+
+{\srcfont mov *d, *s} & \parbox{0.8\linewidth}{onde \textit{d} e \textit{s} são destinos, trata ambos como endereços
+simbólicos e atribui ao elemento apontado por \textit{d} o valor do elemento apontado por \textit{s}}\\ \midrule
+
+{\srcfont mov *d, \&s} & \parbox{0.8\linewidth}{onde \textit{d} é um destino e \textit{s} é um endereçável,
+trata \textit{d} como um endereço simbólico e atribui ao elemento apontado por este endereço o endereço simbólico de
+\textit{s}}\\ \midrule
+
+{\srcfont mov *d, s[i]} & \parbox{0.8\linewidth}{onde \textit{d} e \textit{s} são destinos, e \textit{i} é um operando,
+trata \textit{d} e \textit{s} como endereços simbólicos e atribui ao elemento apontado \textit{d} o valor do elemento
+apontado por \textit{s} mais o deslocamento \textit{i}}\\ \midrule
+
+{\srcfont mov d[i], s} & \parbox{0.8\linewidth}{onde \textit{d} é um destino e \textit{s} e \textit{i} são operandos,
+trata \textit{d} como um endereço simbólico e atribui ao elemento apontado \textit{d} mais o deslocamento \textit{i} o
+valor \textit{s}}\\ \midrule
+
+{\srcfont mov d[i], *s} & \parbox{0.8\linewidth}{onde \textit{d} e \textit{s} são destinos e \textit{i} é um operando,
+trata \textit{d} e \textit{s} como endereços simbólicos e atribui ao elemento apontado \textit{d} mais o deslocamento
+\textit{i} o valor do elemento apontado por \textit{s}}\\ \midrule
+
+{\srcfont mov d[i], \&s} & \parbox{0.8\linewidth}{onde \textit{d} é um destino, \textit{s} é um endereçável e
+\textit{i} é um operando, atribui o endereço simbólico de \textit{s} ao elemento apontado por \textit{d} mais o
+deslocamento \textit{i}}\\ \bottomrule
+\end{tabular}
+\end{table}
+
+
+\section{Controle de fluxo}
+
+As instruções de controle de fluxo causam desvios na execução do programa, que podem ser condicionais ou incondicionais.
+Elas são decritas a seguir.
+
+\subsection{\textbf{brz}}
+
+\textit{sintaxe:}\\{\srcfont brz \textit{<operando\textsubscript{1}>}, \textit{<operando\textsubscript{2}>}}
+
+\noindent \textit{semântica:}\\se \textit{operando\textsubscript{2}} for zero, a próxima instrução a ser executada será a que estiver no
+endereço simbólico dado por \textit{operando\textsubscript{1}}, caso contrário, será a do endereço atual mais um.
+
+
+\subsection{\textbf{brnz}}
+
+\textit{sintaxe:}\\{\srcfont brnz \textit{<operando\textsubscript{1}>}, \textit{<operando\textsubscript{2}>}}
+
+\noindent \textit{semântica:}\\se \textit{operando\textsubscript{2}} for diferente de zero, a próxima instrução a ser executada será a que
+estiver no endereço simbólico dado por \textit{operando\textsubscript{1}}, caso contrário, será a do endereço atual mais um.
+
+
+\subsection{\textbf{jump}}
+
+\textit{sintaxe:}\\{\srcfont jump \textit{<operando>}}
+
+\noindent \textit{semântica:}\\a próxima instrução a ser executada será a que estiver no endereço simbólico dado por \textit{operando}.
+
+
+\section{Pilha}
+
+O interpretador possui uma pilha global de símbolos. As instruções a seguir operam sobre esta pilha.
+
+\subsection{\textbf{push}}
+
+\textit{sintaxe:}\\{\srcfont push \textit{<operando>}}
+
+\noindent \textit{semântica:}\\coloca \textit{operando} no topo da pilha global.
+
+
+\subsection{\textbf{pop}}
+
+\textit{sintaxe:}\\{\srcfont pop \textit{<destino>}}
+
+\noindent \textit{semântica:}\\remove o símbolo no topo da pilha global e atribui seu valor a \textit{destino} (as
+considerações sobre tipos feitas no início deste capítulo devem ser observadas).
+
+
+\section{Subrotinas}
+
+O interpretador suporta diretamente o conceito de subrotina. Quando uma subrotina é chamada, um novo contexto é criado e
+empilhado, o contador de temporários é reiniciado e todos os temporários alocados a partir deste momento pertencerão ao
+novo contexto.
+
+Os parâmetros de função são apelidos para posições na pilha, já que os parâmetros de uma subrotina são sempre passados
+pela pilha global.
+
+
+\subsection{\textbf{param}}
+
+\textit{sintaxe:}\\{\srcfont param \textit{<operando>}}
+
+\noindent \textit{semântica:}\\coloca \textit{operando} no topo da pilha global, para ser utilizado como parâmetro;
+esta chamada é equivalente a {\srcfont push}.
+
+
+\subsection{\textbf{call}}
+
+\textit{sintaxe:}\\{\srcfont call \textit{<operando>} [, \textit{<n>}]}
+
+\noindent \textit{semântica:}\\chama a subrotina cujo endereço simbólico é dado por \textit{operando}, possivelmente com
+\textit{n} parâmetros, onde \textit{n}, quando fornecido, é uma constante inteira não negativa; reserva a seção de pilha
+onde estão os parâmetros para esta rotina, cria um novo contexto e armazena o endereço atual mais um como endereço de
+retorno.
+
+
+\subsection{\textbf{return}}
+
+\textit{sintaxe:}\\{\srcfont return [, \textit{<operando>}]}
+
+\noindent \textit{semântica:}\\desaloca todos os temporários e remove remove todos os elementos da pilha relativos
+ao contexto atual, retorna o contador de programa para o endereço de retorno armazenado nexte contexto, muda o contexto
+atual para o último que estava no topo da pilha de contextos e, se \textit{operando} for fornecido, armazena-o no topo
+da pilha global.
+
+
+\section{Chamadas de sistema}
+
+Estas instruções são utilitárias, e realizam funções relacionadas ao sistema operacional.
+
+\subsection{\textbf{print}}
+
+\textit{sintaxe:}\\{\srcfont print \textit{<operando>}}
+
+\noindent \textit{semântica:}\\imprime \textit{operando} na saída padrão.
+
+
+\subsection{\textbf{println}}
+
+\textit{sintaxe:}\\{\srcfont println [\textit{<operando>]}}
+
+\noindent \textit{semântica:}\\se \textit{operando} for fornecido, imprime-o na saída padrão, em seguida imprime um
+caractere de nova linha.
+
+
+\clearpage
+\chapter{Exemplos}
+
+\section{Fibonacci}
+
+{\srcfont\footnotesize
+\noindent{\color{gray}.table}\\
+{\color{blue}int} n = {\color{orange}10}\\
+{\color{gray}.code}\\
+{\color{red}fibonacci:}\\
+{\color{green!50!black}// if first parameter is less than 1, set \$0 to 1, otherwise to 0}\\
+{\color{violet}slt} \$0, \#0, {\color{orange}1}\\
+{\color{violet}brz} L1, \$0 {\color{green!50!black}// if \$0 is zero, goto L1}\\
+{\color{violet}return} {\color{orange}0}\\
+{\color{red}L1:}\\
+{\color{green!50!black}// if first parameter is less than 2, set \$0 to 1, otherwise to 0}\\
+{\color{violet}slt} \$0, \#0, {\color{orange}2}\\
+{\color{violet}brz} L2, \$0 {\color{green!50!black}// if \$0 is zero, goto L2}\\
+{\color{violet}return {\color{orange}1}}
+{\color{red}L2:}\\
+{\color{green!50!black}// call fibonacci with value (\#0 - 1)}\\
+{\color{violet}sub} \$0, \#0, {\color{orange}1}\\ 
+{\color{violet}param} \$0\\
+{\color{violet}call} fibonacci, {\color{orange}1}\\
+{\color{violet}pop} \$0 {\color{green!50!black}// get result on \$0}\\
+{\color{green!50!black}// call fibonacci with value (\#0 - 2)}\\
+{\color{violet}sub} \$1, \#0, {\color{orange}2}\\
+{\color{violet}param} \$1\\
+{\color{violet}call} fibonacci, {\color{orange}1}\\
+pop \$1 {\color{green!50!black}// get result on \$1}\\
+{\color{green!50!black}// adds \$0 and \$1 and returns}\\
+{\color{violet}add} \$0, \$0, \$1\\
+{\color{violet}return} \$0\\
+{\color{red}main:}\\
+{\color{violet}param} n\\
+{\color{violet}call} fibonacci, {\color{orange}1}\\
+{\color{violet}pop} \$0\\
+{\color{violet}println} \$0\\
+}
+
+\section{Quicksort}
+
+{\srcfont
+\noindent{\color{green!50!black}// Quicksort algorithm, as proposed by Cormen et. al}\\
+{\color{gray}.table}\\
+{\color{blue}int} v[12] = \{{\color{orange}12}, {\color{orange}11}, {\color{orange}10}, {\color{orange}9},
+{\color{orange}8}, {\color{orange}7}, {\color{orange}6}, {\color{orange}5}, {\color{orange}4}, {\color{orange}3},
+{\color{orange}2}, {\color{orange}1}\}\\
+{\color{blue}int} size = {\color{orange}12}\\
+{\color{gray}.code}\\
+{\color{green!50!black}// swaps two array elements}\\
+{\color{red}swap:}\\
+{\color{violet}mov} \$0, \#0[\#1]\\
+{\color{violet}mov} \$1, \#0[\#2]\\
+{\color{violet}mov} \#0[\#1], \$1\\
+{\color{violet}mov} \#0[\#2], \$0\\
+{\color{violet}return}\\
+{\color{green!50!black}//partition(A, p, r)}\\
+{\color{green!50!black}//\hspace{32pt}x = A[r]}\\
+{\color{green!50!black}//\hspace{32pt}i = p - 1}\\
+{\color{green!50!black}//\hspace{32pt}for j = p to r - 1}\\
+{\color{green!50!black}//\hspace{32pt}\hspace{32pt}if A[i] <= x}\\
+{\color{green!50!black}//\hspace{32pt}\hspace{32pt}i = i + 1}\\
+{\color{green!50!black}//\hspace{32pt}\hspace{32pt}swap(A, i, j)}\\
+{\color{green!50!black}//\hspace{32pt}swap(A, i + 1, r)}\\
+{\color{green!50!black}//\hspace{32pt}return i + 1}\\
+{\color{red}partition:}\\
+{\color{violet}mov} \$0, \#0[\#2]\\
+{\color{violet}sub} \$1, \#1, {\color{orange}1}\\
+{\color{violet}sub} \$3, \#2, {\color{orange}1}\\
+{\color{red}P0:}\\
+{\color{violet}sleq} \$2, \#1, \$3\\
+{\color{violet}brz} P1, \$2
+{\color{violet}mov} \$2, \#0[\#1]\\
+{\color{violet}sleq} \$2, \$2, \$0\\
+{\color{violet}brz} P2, \$2\\
+{\color{violet}add} \$1, \$1, {\color{orange}1}\\
+{\color{violet}param} \#0\\
+{\color{violet}param} \$1\\
+{\color{violet}param} \#1\\
+{\color{violet}call} swap, {\color{orange}3}\\
+{\color{red}P2:}\\
+{\color{violet}add} \#1, \#1, {\color{orange}1}\\
+{\color{violet}jump} P0\\
+{\color{red}P1:}\\
+{\color{violet}param} \#0\\
+{\color{violet}add} \$1, \$1, {\color{orange}1}\\
+{\color{violet}param} \$1\\
+{\color{violet}param} \#2\\
+{\color{violet}call} swap, {\color{orange}3}\\
+{\color{violet}return} \$1\\
+{\color{green!50!black}//quicksort(A, p, r)}\\
+{\color{green!50!black}//\hspace{32pt}if p < r}\\
+{\color{green!50!black}//\hspace{32pt}\hspace{32pt}q := partition(A, p, r)}\\
+{\color{green!50!black}//\hspace{32pt}\hspace{32pt}quicksort(A, p, q - 1)}\\
+{\color{green!50!black}//\hspace{32pt}\hspace{32pt}quicksort(A, q + 1, r)}\\
+{\color{red}quick:}\\
+{\color{violet}slt} \$0, \#1, \#2\\
+{\color{violet}brz} Q1, \$0\\
+{\color{violet}param} \#0\\
+{\color{violet}param} \#1\\
+{\color{violet}param} \#2\\
+{\color{violet}call} partition, {\color{orange}3}\\
+{\color{violet}pop} \$0\\
+{\color{violet}param} \#0\\
+{\color{violet}param} \#1\\
+{\color{violet}sub} \$1, \$0, {\color{orange}1}\\
+{\color{violet}param} \$1\\
+{\color{violet}call} quick, {\color{orange}3}\\
+{\color{violet}param} \#0\\
+{\color{violet}add} \$1, \$0, {\color{orange}1}\\
+{\color{violet}param} \$1\\
+{\color{violet}param} \#2\\
+{\color{violet}call} quick, {\color{orange}3}\\
+{\color{red}Q1:}\\
+{\color{violet}return}\\
+{\color{red}main:}\\
+{\color{green!50!black}// call quick(\&v, 0, size - 1)}\\
+{\color{violet}mov} \$0, \&v\\
+{\color{violet}param} \$0\\
+{\color{violet}param} {\color{orange}0}\\
+{\color{violet}sub} \$0, size, {\color{orange}1}\\
+{\color{violet}param} \$0\\
+{\color{violet}call} quick, {\color{orange}3}\\
+{\color{green!50!black}// \$0 = 0, \$1 = size - 1}\\
+{\color{violet}mov} \$0, {\color{orange}0}\\
+{\color{violet}sub} \$1, size, {\color{orange}1}\\
+{\color{green!50!black}// while \$0 < size}\\
+{\color{red}L1:}\\
+{\color{violet}slt} \$2, \$0, size\\
+{\color{violet}brz} L2, \$2\\
+{\color{green!50!black}// print v[\$0]}\\
+{\color{violet}mov} \$2, \&v\\
+{\color{violet}mov} \$2, \$2[\$0]\\
+{\color{violet}print} \$2\\
+{\color{green!50!black}// if \$0 < size - 1, print ", "}\\
+{\color{violet}slt} \$2, \$0, \$1\\
+{\color{violet}brz} L3, \$2\\
+{\color{violet}print} {\color{orange}','}\\
+{\color{violet}print} {\color{orange}' '}\\
+{\color{red}L3:}\\
+{\color{violet}add} \$0, \$0, {\color{orange}1}\\
+{\color{violet}jump} L1 {\color{green!50!black}// loop}\\
+{\color{red}L2:}\\
+{\color{violet}println}\\
+}
+
+
+\backmatter
+
+\bibliography{bibliography}
+
+\end{document}

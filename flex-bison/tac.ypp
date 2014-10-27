@@ -84,6 +84,7 @@
 %type <opcode> unary_opname
 %type <instr> assignment
 %type <instr> single_operand_cmd
+%type <instr> branch
 %type <instr> call
 %type <instr> ret
 
@@ -381,6 +382,7 @@ cmd:
 	| unary_operation
 	| assignment
 	| single_operand_cmd
+	| branch
 	| call
 	| ret
 ;
@@ -439,9 +441,11 @@ binary_opname:
 	| SLEQ { $$ = Instruction::SLEQ; }
 	;
 
+
 unary_operation:
 	unary_opname target ',' operand { $$ = new Instruction(@$, $1, $2, $4); }
 	;
+
 
 unary_opname:
 	MINUS { $$ = Instruction::MINUS; }
@@ -453,9 +457,8 @@ unary_opname:
 	| INTTOCH { $$ = Instruction::INTTOCH; }
 	| FLTOINT { $$ = Instruction::FLTOINT; }
 	| FLTOCH { $$ = Instruction::FLTOCH; }
-	| BRZ { $$ = Instruction::BRZ; }
-	| BRNZ { $$ = Instruction::BRNZ; }
 	;
+
 
 assignment:
 	MOV target ',' operand { $$ = new Instruction(@$, Instruction::MOVVV, $2, $4); }
@@ -471,6 +474,7 @@ assignment:
 	| MOV target '[' operand ']' ',' '&' addressable { $$ = new Instruction(@$, Instruction::MOVIA, $2, $8, $4); }
 	;
 
+
 single_operand_cmd:
 	JUMP operand { $$ = new Instruction(@$, Instruction::JUMP, $2); }
 	| PARAM operand { $$ = new Instruction(@$, Instruction::PARAM, $2); }
@@ -480,6 +484,12 @@ single_operand_cmd:
 	| PUSH operand { $$ = new Instruction(@$, Instruction::PUSH, $2); }
 	| POP target { $$ = new Instruction(@$, Instruction::POP, $2); }
 	;
+
+
+branch:
+	BRZ operand ',' operand { $$ = new Instruction(@$, Instruction::BRZ, $2, $4); }
+	| BRNZ operand ',' operand { $$ = new Instruction(@$, Instruction::BRNZ, $2, $4); }
+
 
 call:
 	CALL operand {
