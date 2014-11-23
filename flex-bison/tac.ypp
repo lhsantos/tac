@@ -57,10 +57,10 @@
 %token CODE ".code"
 
 %token CHAR INT FLOAT
-%token ADD SUB MUL DIV AND OR BAND BOR BXOR SHL SHR SEQ SLT SLEQ
+%token ADD SUB MUL DIV AND OR BAND BOR BXOR SHL SHR MOD SEQ SLT SLEQ
 %token MINUS NOT BNOT CHTOINT CHTOFL INTTOFL INTTOCH FLTOINT FLTOCH BRZ BRNZ
 %token MOV
-%token JUMP PARAM PRINT PRINTLN CALL RETURN PUSH POP
+%token JUMP PARAM PRINT PRINTLN SCANC SCANI SCANF MEMA MEMF RAND CALL RETURN PUSH POP
 %token EOL
 
 %type <symbol> symbol
@@ -84,6 +84,7 @@
 %type <opcode> unary_opname
 %type <instr> assignment
 %type <instr> single_operand_cmd
+%type <instr> mema
 %type <instr> branch
 %type <instr> call
 %type <instr> ret
@@ -133,14 +134,14 @@
 %%
 
 tac_program:
-	table_block code_block { instructions = $2; start_address = table->next_addr(); }
+	table_block code_block { instructions = $2; start_address = table->upper_bound(); }
 	| code_block { instructions = $1; }
 ;
 
 
 table_block:
 	EOL table_block
-	| TABLE symbol_list { table->end_var_section(); g_program_counter = table->next_addr(); }
+	| TABLE symbol_list { g_program_counter = table->upper_bound(); }
 ;
 
 
@@ -382,6 +383,7 @@ cmd:
 	| unary_operation
 	| assignment
 	| single_operand_cmd
+	| mema
 	| branch
 	| call
 	| ret
@@ -436,6 +438,7 @@ binary_opname:
 	| BXOR { $$ = Instruction::BXOR; }
 	| SHL { $$ = Instruction::SHL; }
 	| SHR { $$ = Instruction::SHR; }
+	| MOD { $$ = Instruction::MOD; }
 	| SEQ { $$ = Instruction::SEQ; }
 	| SLT { $$ = Instruction::SLT; }
 	| SLEQ { $$ = Instruction::SLEQ; }
@@ -481,8 +484,18 @@ single_operand_cmd:
 	| PRINT operand { $$ = new Instruction(@$, Instruction::PRINT, $2); }
 	| PRINTLN { $$ = new Instruction(@$, Instruction::PRINTLN); }
 	| PRINTLN operand { $$ = new Instruction(@$, Instruction::PRINTLN, $2); }
+	| SCANC target { $$ = new Instruction(@$, Instruction::SCANC, $2); }
+	| SCANI target { $$ = new Instruction(@$, Instruction::SCANI, $2); }
+	| SCANF target { $$ = new Instruction(@$, Instruction::SCANF, $2); }
+	| MEMF operand { $$ = new Instruction(@$, Instruction::MEMF, $2); }
 	| PUSH operand { $$ = new Instruction(@$, Instruction::PUSH, $2); }
 	| POP target { $$ = new Instruction(@$, Instruction::POP, $2); }
+	| RAND target { $$ = new Instruction(@$, Instruction::RAND, $2); }
+	;
+
+
+mema:
+	MEMA target ',' operand { $$ = new Instruction(@$, Instruction::MEMA, $2, $4); }
 	;
 
 

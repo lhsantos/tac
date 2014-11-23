@@ -1,9 +1,28 @@
+/*
+Copyright 2014 Luciano Henrique de Oliveira Santos
+
+This file is part of TAC project.
+
+TAC project is licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 /**
  * @file instruction.cpp
  *
  * @brief
  *
- * @date 12/10/2014
+ * @date 2014-10-12
+ *
  * @author Luciano Santos
  */
 
@@ -222,6 +241,7 @@ namespace tac
 		case SHL:	  return "shl";
 		case SHR:	  return "shr";
 		case BNOT:	  return "bnot";
+		case MOD:	  return "mod";
 		case CHTOINT: return "chtoint";
 		case CHTOFL:  return "chtofl";
 		case INTTOCH: return "inttoch";
@@ -246,6 +266,12 @@ namespace tac
 		case PARAM:	  return "param";
 		case PRINT:	  return "print";
 		case PRINTLN: return "println";
+		case SCANC:   return "scanc";
+		case SCANI:   return "scani";
+		case SCANF:   return "scanf";
+		case RAND:    return "rand";
+		case MEMA:    return "mema";
+		case MEMF:    return "memf";
 		case CALL: 	  return "call";
 		case RETURN:  return "return";
 		case PUSH:	  return "push";

@@ -9,7 +9,7 @@ ODIR=./obj
 BDIR=./bin
 SODIR=$(ODIR)/src
 LYODIR=$(ODIR)/flex-bison
-CFLAGS=-I$(IDIR) -I$(LYDIR) -O3 -c
+CFLAGS=-I$(IDIR) -I$(LYDIR) -std=c++11 -O3 -c
 
 CPPS := $(wildcard $(SDIR)/*.cpp)
 OBJS := $(addprefix $(SODIR)/,$(notdir $(CPPS:.cpp=.o)))

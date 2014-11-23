@@ -1,13 +1,14 @@
 \documentclass[12pt,a4paper,extrafontsizes,article]{memoir}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
-\usepackage[numbers]{natbib}
-\usepackage{url}
-\bibliographystyle{plainnat}
+\usepackage[portuguese]{babel}
+\usepackage[authoryear]{natbib}
+\bibliographystyle{plainnat} % on miktex, if this option is not here, the authors are not found
 \renewcommand\bibname{Bibliografia}
 \renewcommand*\contentsname{Sumário}
 \renewcommand*\listtablename{Lista de Tabelas}
 \renewcommand*\tablename{Tabela}
+\usepackage{url}
 \usepackage{comment}
 \usepackage{memsty}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -60,7 +61,9 @@
 \bigskip
 \normalsize{}\par
 \medskip
-\normalsize{Ref. Versão 0.1}\par
+\normalsize{Ref.\ Versão 0.11}\par
+\medskip
+\normalsize{Brasília, \today}\par
 \end{center}
 
 
@@ -86,8 +89,8 @@
 \section{Objetivo}
 
 Este manual de referência técnica documenta o programa \textit{TAC} (\textit{Three Address Code}), um interpretador de
-código de três endereços baseado no código de alto nivel de \citeauthor{Aho:1986:CPT:6448}. Este interpretador tem fins
-puramente didáticos, foi projetado para utilização no contexto de uma disciplina de tradudores/compiladores, no nível de
+código de três endereços baseado no código de alto nível de \citeauthor{Aho:1986:CPT:6448}. Este interpretador tem fins
+puramente didáticos, foi projetado para utilização no contexto de uma disciplina de tradutores/compiladores, no nível de
 graduação.
 
 O código de três endereços reconhecido pelo TAC é Turing completo e pode naturalmente ser utilizado como código
@@ -108,7 +111,7 @@ características básicas:
 
 Ao longo deste manual, as seguinte convenções serão seguidas:
 \begin{itemize}
-  \item termos novos introduzidos pela primeira vez, nomes de programas e palavras estrangeiras ele virão em
+  \item termos novos introduzidos pela primeira vez, nomes de programas e palavras estrangeiras virão em
   \textit{itálico};
   \item comandos a serem executados no \textit{prompt}, nomes de arquivos e diretórios, nomes de opções da linha de
   comando, exemplos de código fonte e regras de sintaxe virão em fonte {\srcfont monoespaço};
@@ -130,11 +133,11 @@ As seções a seguir descrevem o processo de compilação e invocação do execu
 
 \section{Compilando o TAC}
 
-Para compilar o TAC, são necessários os programas \textit{flex}, \textit{bison}, \textit{g++} e \textit{make}.
+Para compilar o TAC, são necessários os programas \textit{flex}, \textit{bison}, \textit{g++} (v. 4.7+) e \textit{make}.
 
 Após obter o código fonte por meio do \textit{site} ou via {\srcfont git}\footnote{http://git-scm.com/}, abra uma linha
 de comando no sistema operacional e mova o diretório corrente para a raiz do código fonte (onde estão os arquivos
-{\srcfont LICENSE} e {\srcfont Makefile}). Para compilar e gerar o executável do tac, faça:
+{\srcfont LICENSE} e {\srcfont Makefile}). Para compilar e gerar o executável do TAC, faça:
 
 \bigskip
 {\srcfont make all}
@@ -233,7 +236,7 @@ Os nomes dos símbolos devem ser identificadores ANSI C únicos, não é permiti
 As seguinte entrada é uma tabela de símbolos válida:\\
 
 {\srcfont
-\noindent{\color{green!50!black}// exemplo de tabela de simbolos}\\
+\noindent{\color{green!50!black}// exemplo de tabela de símbolos}\\
 {\color{gray}.table}\\
 {\color{blue}int} n = {\color{orange}5}\\
 {\color{blue}int} m = {\color{orange}0xCAFEBABE}\\
@@ -243,7 +246,7 @@ As seguinte entrada é uma tabela de símbolos válida:\\
 {\color{blue}float} vf[4] = \{{\color{orange}1f}, {\color{orange}2.0}, {\color{orange}.3}, {\color{orange}5F}\}\\
 {\color{blue}char} \_char\_array[] = \{{\color{orange}'H'}, {\color{orange}'e'}, {\color{orange}'l'},
 {\color{orange}'l'}, {\color{orange}'o'}, {\color{orange}'\char`\\0'}\}\\
-{\color{blue}char} string1 [] = {\color{orange}"Hello world!"}
+{\color{blue}char} string1 [] = {\color{orange}\char`\"Hello world!\char`\"}
 }
 
 \section{Seção de Código}
@@ -257,7 +260,7 @@ linha. Uma instrução é da forma:
 \bigskip
 
 Um rótulo é um identificador ANSI C seguido de {\srcfont ':'}. Um rótulo deve ser um identificador único no programa,
-não podendo dois rótulos diferentes ou um rótulo e um símbolo qualquer da tabela utilizarem o mesmo idenficador. Pode
+não podendo dois rótulos diferentes ou um rótulo e um símbolo qualquer da tabela utilizarem o mesmo identificador. Pode
 haver quebra de linhas e linhas em branco entre um rótulo e a instrução que vem logo em seguida. O rótulo especial
 {\srcfont main:} é utilizado para indicar o ponto de partida do programa.
 
@@ -283,7 +286,7 @@ ilustração, o trecho abaixo é um arquivo de entrada válido:\\
 {\color{violet}mov} \$2, \&v\\
 {\color{violet}mov} \$2, \$2[\$0]\\
 {\color{violet}print} \$2\\
-{\color{green!50!black}// if \$0 < size - 1, print ", "}\\
+{\color{green!50!black}// if \$0 < size - 1, print \char`\", \char`\"}\\
 {\color{violet}slt} \$2, \$0, \$1\\
 {\color{violet}brz} L3, \$2\\
 {\color{violet}print} {\color{orange}','}\\
@@ -295,6 +298,49 @@ ilustração, o trecho abaixo é um arquivo de entrada válido:\\
 {\color{violet}println}\\
 }
 
+
+\clearpage
+\chapter{Modelo de Memória do TAC}
+\label{chp:memory}
+
+O TAC não é uma máquina virtual e não permite a manipulação direta de memória, mas apenas de símbolos. Por esse motivo,
+os endereços acessados em tempo de execução têm semântica definida apenas para os mecanismos internos interpretador e
+não devem ser manipulados da mesma maneira que um código \textit{assembly} manipula endereços de máquina (real ou
+virtual).
+
+Existem quatro grandes seções internas na memória global, distintas e não necessariamente contíguas:
+\begin{itemize}
+  \item a seção \textit{heap} armazena as variáveis estáticas definidas na tabela de símbolos;
+  \item a seção \textit{text} armazena as instruções;
+  \item a \textit{pilha} armazena variáveis locais a cada contexto (inclusive parâmetros de função) e pode ser
+  expandida em tempo de execução, com as instruções \textit{push} e \textit{pop} (Seção \ref{sec:stack});
+  \item a seção de \textit{memória dinâmica} armazena os símbolos alocados dinamicamente (Seção \ref{sec:syscall}).
+\end{itemize}
+
+O TAC é uma máquina de 32 bits, podendo endereçar $2^{32}$ \textbf{símbolos}. As seções \textit{heap} e \textit{text}
+juntas, podem conter até $\lfloor\frac{2^{32}}{3}\rfloor$ símbolos, considerando-se cada instrução como um símbolo. A
+seção de pilha pode armazenar até $\lfloor\frac{2^{32}}{3}\rfloor$ símbolos e, por fim, a seção de memória dinâmica pode
+armazenar até $\lfloor\frac{2^{32}}{3}\rfloor+1$ símbolos.
+
+Cada chamada à instrução \textit{call} (Seção \ref{sec:subroutines}) cria um novo \textit{contexto}. O contexto ocupa um
+espaço na pilha global, chamado de \textit{frame}, onde estão os parâmetros da chamada de função atual e possivelmente
+outros símbolos necessários ao contexto. Chamadas a \textit{push} ampliam a pilha global e chamadas a \textit{pop}
+diminuem esta pilha, de tal maneira que é possível corromper o \textit{frame} atual e/ou invadir frames de chamadas
+anteriores, se a pilha não for manipulada corretamente.
+
+Cada contexto possui símbolos adicionais e exclusivos que não ficam na pilha global, mas são gerenciados separadamente
+pelo interpretador. Dentre estes símbolos, estão até 1024 \textit{temporários}, que são alocados e desalocados sob
+demanda e também o endereço de retorno da chamada de função atual.
+
+A Seção \ref{sec:mov} descreve a instrução \textit{mov}, que permite, dentre outras possibilidades, obter o endereço
+simbólico de valores da tabela de símbolos. Além disso, conforme descrito no Capítulo \ref{chp:instructions}, existem
+registradores especiais que guardam os endereços de \textit{frames} e da pilha, do \textit{program counter} e de
+retorno de função.
+
+Pode-se assumir que os endereços dentro das seções de memória seguem a ordem crescente. Incrementar um endereço
+simbólico, desde que respeitados os limites das seções e dos dados, permite acessar o próximo símbolo na pilha, a
+próxima variável (ou elemento de vetor) ou a próxima instrução. Analogamente, decrementar um endereço simbólico acessa o
+símbolo anterior.
 
 \clearpage
 \chapter{Instruções}
@@ -309,15 +355,20 @@ Para todas as instruções a seguir, valem as seguintes definições:
   cada contexto.
   
   \item Um \textbf{parâmetro de função} é da forma {\srcfont \#\textit{n}}, onde \textit{n} é um inteiro não negativo.
-  Esta expressão indica o n-ésimo parâmetro empilhado no contexto de uma subrotina, iniciando em zero. Por exemplo, se
-  uma função é chamada com 3 parâmetros, então {\srcfont \#0} indica o primeiro parâmetro colocado na pilha, {\srcfont
+  Esta expressão indica o enésimo parâmetro empilhado no contexto de uma subrotina, iniciando em zero. Por exemplo, se
+  uma função é chamada com 3 parâmetros, então {\srcfont \#0} indica o primeiro pa\-râ\-me\-tro colocado na pilha, {\srcfont
   \#1}, o segundo, e assim por diante.
   
   \item Um \textbf{temporário} é da forma {\srcfont \$\textit{n}}, onde \textit{n} é um inteiro não negativo.
-  Esta expressão indica o n-ésimo temporário alocado para o contexto atual, iniciando em zero. Por exemplo, {\srcfont
-  \$0} indica o primeiro temporário no contexto atual, {\srcfont \$1}, o segundo, e assim por diante. Os temporários
-  especiais {\srcfont \$s} e {\srcfont \$f} apontam sempre, respectivamente, para o topo da pilha global e para o início
-  da seção da pilha relativa ao contexto atual.
+  Esta expressão indica o enésimo temporário alocado para o contexto atual, iniciando em zero. Por exemplo, {\srcfont
+  \$0} indica o primeiro temporário no contexto atual, {\srcfont \$1}, o segundo, e assim por diante. Além disso, os
+  temporários especiais são definidos:
+  \begin{itemize}
+    \item {\srcfont \$s} retorna o endereço simbólico do elemento no topo da pilha;
+    \item {\srcfont \$f} retorna o endereço simbólido do início da seção da pilha relativa ao contexto atual;
+    \item {\srcfont \$pc} retorna o endereço simbólido da instrução sendo executada;
+    \item {\srcfont \$ra} retorna o endereço simbólico de retorno do contexto atual;
+  \end{itemize}
   
   \item Um \textbf{endereçável} é um elemento que possui endereço. Endereçáveis válidos podem ser parâmetros de função e
   símbolos da tabela. Observe que um rótulo não é um endereçável, pois indica o endereço de uma instrução, mas não
@@ -347,7 +398,7 @@ um vetor. O endereço de um vetor refere-se ao endereço do primeiro elemento de
 Todas as instruções lógico-aritméticas são da forma:
 
 \bigskip
-{\srcfont\scriptsize \textit{<nome>} \textit{<destino>}, \textit{<operando>} [, \textit{<operando>}]}
+{\srcfont \textit{<nome>} \textit{<destino>}, \textit{<operando>} [, \textit{<operando>}]}
 \bigskip
 
 Devem ser respeitadas as considerações sobre tipo feitas no início deste capítulo. A seguir, são descritas todas as
@@ -469,12 +520,21 @@ operandos e atribui o resultado ao destino.
 operando e atribui o resultado ao destino.
 
 
+\subsection{\textbf{mod}}
+
+\textit{sintaxe:}\\{\srcfont mod \textit{<destino>}, \textit{<operando\textsubscript{1}>},
+\textit{<operando\textsubscript{2}>}}
+
+\noindent \textit{semântica:}\\os operandos serão lidos como inteiros, faz a divisão inteira de {\srcfont
+\textit{operando\textsubscript{1}}} por {\srcfont \textit{operando\textsubscript{2}}} e atribui o resto ao destino.
+
+
 \section{Relacionais}
 
 Todas as instruções relacionais são da forma:
 
 \bigskip
-{\srcfont\scriptsize \textit{<nome>} \textit{<destino>}, \textit{<operando\textsubscript{1}>},
+{\srcfont \textit{<nome>} \textit{<destino>}, \textit{<operando\textsubscript{1}>},
 \textit{<operando\textsubscript{2}>}]}
 \bigskip
 
@@ -514,12 +574,13 @@ atribui {\srcfont 1} ao destino, caso contrário, atribui {\srcfont 0}.
 Todas as instruções de conversão de tipo são da forma:
 
 \bigskip
-{\srcfont\scriptsize \textit{<nome>} \textit{<destino>}, \textit{<operando>}}
+{\srcfont \textit{<nome>} \textit{<destino>}, \textit{<operando>}}
 \bigskip
 
-O tipo de origem e o de destino serão verificados. Se o destino (desde que não seja um temporário) ou a origem forem de
-tipos diferentes dos esperados pelas instruções, um \textit{warning} será gerado. Os valores lidos que não estiverem
-no tipo de origem não são implicitamente convertidos, mas lidos no exato estado de seus \textit{bytes}.
+O tipo de origem e o de destino serão verificados. Se o destino (desde que não seja um temporário ou um símbolo alocado
+dinamicamente) ou a origem forem de tipos diferentes dos esperados pelas instruções, um \textit{warning} será gerado. Os
+valores lidos que não estiverem no tipo de origem não são implicitamente convertidos, mas lidos no exato estado de seus
+\textit{bytes}.
 
 A seguir, são descritas todas as instruções de conversão de tipo.
 
@@ -575,7 +636,7 @@ flutuante para um inteiro (com possíveis perdas) e atribui ao destino.
 \label{sec:mov}
 
 A instrução de atribuição -- {\srcfont mov} -- copia o valor de um operando em um destino. No entanto, existem várias
-versões desta intrução, que estão descritas na Tabela \ref{tab:mov}.
+versões desta instrução, que estão descritas na Tabela \ref{tab:mov}.
 
 É importante lembrar que as considerações sobre tipos feitas no início deste capítulo devem ser observadas.
 
@@ -631,7 +692,7 @@ deslocamento \textit{i}}\\ \bottomrule
 \section{Controle de fluxo}
 
 As instruções de controle de fluxo causam desvios na execução do programa, que podem ser condicionais ou incondicionais.
-Elas são decritas a seguir.
+Elas são descritas a seguir.
 
 \subsection{\textbf{brz}}
 
@@ -657,6 +718,7 @@ estiver no endereço simbólico dado por \textit{operando\textsubscript{1}}, cas
 
 
 \section{Pilha}
+\label{sec:stack}
 
 O interpretador possui uma pilha global de símbolos. As instruções a seguir operam sobre esta pilha.
 
@@ -676,6 +738,7 @@ considerações sobre tipos feitas no início deste capítulo devem ser observad
 
 
 \section{Subrotinas}
+\label{sec:subroutines}
 
 O interpretador suporta diretamente o conceito de subrotina. Quando uma subrotina é chamada, um novo contexto é criado e
 empilhado, o contador de temporários é reiniciado e todos os temporários alocados a partir deste momento pertencerão ao
@@ -708,12 +771,13 @@ retorno.
 \textit{sintaxe:}\\{\srcfont return [, \textit{<operando>}]}
 
 \noindent \textit{semântica:}\\desaloca todos os temporários e remove remove todos os elementos da pilha relativos
-ao contexto atual, retorna o contador de programa para o endereço de retorno armazenado nexte contexto, muda o contexto
+ao contexto atual, retorna o contador de programa para o endereço de retorno armazenado neste contexto, muda o contexto
 atual para o último que estava no topo da pilha de contextos e, se \textit{operando} for fornecido, armazena-o no topo
 da pilha global.
 
 
 \section{Chamadas de sistema}
+\label{sec:syscall}
 
 Estas instruções são utilitárias, e realizam funções relacionadas ao sistema operacional.
 
@@ -730,6 +794,56 @@ Estas instruções são utilitárias, e realizam funções relacionadas ao siste
 
 \noindent \textit{semântica:}\\se \textit{operando} for fornecido, imprime-o na saída padrão, em seguida imprime um
 caractere de nova linha.
+
+
+\subsection{\textbf{scanc}}
+
+\textit{sintaxe:}\\{\srcfont scanc \textit{<destino>}}
+
+\noindent \textit{semântica:}\\lê da entrada padrão um único caractere e armazena-o em \textit{destino}.
+
+
+\subsection{\textbf{scani}}
+
+\textit{sintaxe:}\\{\srcfont scani \textit{<destino>}}
+
+\noindent \textit{semântica:}\\lê da entrada padrão um número inteiro (equivalente à função {\srcfont scanf} da
+linguagem C) e armazena-o em \textit{destino}.
+
+
+\subsection{\textbf{scanf}}
+
+\textit{sintaxe:}\\{\srcfont scanf \textit{<destino>}}
+
+\noindent \textit{semântica:}\\lê da entrada padrão um número em ponto flutuante (equivalente à função {\srcfont scanf}
+da linguagem C) e armazena-o em \textit{destino}.
+
+
+\subsection{\textbf{mema}}
+
+\textit{sintaxe:}\\{\srcfont mema  \textit{<destino>}, \textit{<operando>}}
+
+\noindent \textit{semântica:}\\interpreta \textit{operando} como um inteiro sem sinal e aloca dinamicamente esta
+quantidade de símbolos contíguos, salvando em \textit{destino} o endereço simbólico do primeiro símbolo; se não
+for possível alocar, \textit{destino} recebe o valor 0; para fins de conversão de tipo, símbolos alocados dinamicamente
+se comportam como temporários.
+
+
+\subsection{\textbf{memf}}
+
+\textit{sintaxe:}\\{\srcfont memf  \textit{<operando>}}
+
+\noindent \textit{semântica:}\\desaloca o(s) símbolo(s) previamente alocado(s), cujo endereço simbólico (do primeiro
+símbolo) é dado por \textit{operando}.
+
+
+\subsection{\textbf{rand}}
+
+\textit{sintaxe:}\\{\srcfont rand \textit{<destino>}}
+
+\noindent \textit{semântica:}\\gera um número inteiro pseudo-aleatório entre 0 e 2.147.483.647 e armazena-o em
+\textit{destino}.
+
 
 
 \clearpage
@@ -867,7 +981,7 @@ pop \$1 {\color{green!50!black}// get result on \$1}\\
 {\color{violet}mov} \$2, \&v\\
 {\color{violet}mov} \$2, \$2[\$0]\\
 {\color{violet}print} \$2\\
-{\color{green!50!black}// if \$0 < size - 1, print ", "}\\
+{\color{green!50!black}// if \$0 < size - 1, print \char`\", \char`\"}\\
 {\color{violet}slt} \$2, \$0, \$1\\
 {\color{violet}brz} L3, \$2\\
 {\color{violet}print} {\color{orange}','}\\
@@ -882,6 +996,7 @@ pop \$1 {\color{green!50!black}// get result on \$1}\\
 
 \backmatter
 
+\bibliographystyle{plainnat}
 \bibliography{bibliography}
 
 \end{document}

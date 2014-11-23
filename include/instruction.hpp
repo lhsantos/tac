@@ -1,9 +1,28 @@
+/*
+Copyright 2014 Luciano Henrique de Oliveira Santos
+
+This file is part of TAC project.
+
+TAC project is licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 /**
  * @file instruction.hpp
  *
  * @brief
  *
- * @date 12/10/2014
+ * @date 2014-10-12
+ *
  * @author Luciano Santos
  */
 
@@ -83,6 +102,7 @@ namespace tac
 			SHL		= 0x13,
 			SHR		= 0x14,
 			BNOT	= 0x15,
+			MOD		= 0x16,
 
 			CHTOINT	= 0x20, // ...0000
 			CHTOFL	= 0x22, // ...0010
@@ -103,7 +123,12 @@ namespace tac
 			MOVID	= 0x3D, // ...1101
 			MOVIA	= 0x3E, // ...1110
 
-			POP		= 0x40,
+			MEMA	= 0x40,
+			POP		= 0x41,
+			SCANC	= 0x42,
+			SCANI	= 0x43,
+			SCANF	= 0x44,
+			RAND	= 0x45,
 
 			BRZ		= 0x50,
 			BRNZ	= 0x51,
@@ -111,9 +136,10 @@ namespace tac
 			PARAM	= 0x53,
 			PRINT	= 0x54,
 			PRINTLN	= 0x55,
-			CALL	= 0x56,
-			RETURN	= 0x57,
-			PUSH	= 0x58
+			MEMF	= 0x56,
+			CALL	= 0x57,
+			RETURN	= 0x58,
+			PUSH	= 0x59
 		};
 
 		location loc;

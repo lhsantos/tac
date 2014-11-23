@@ -1,14 +1,35 @@
+/*
+Copyright 2014 Luciano Henrique de Oliveira Santos
+
+This file is part of TAC project.
+
+TAC project is licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 /**
- * @file compiler.cpp
+ * @file interpreter.cpp
  *
  * @brief
  *
- * @date 10/10/2014
+ * @date 2014-10-10
+ *
  * @author Luciano Santos
  */
 
 #include <fstream>
 #include <iomanip>
+#include <cstdlib>
+
 
 #include "interpreter.hpp"
 #define ON_ERROR(msg, p) errors.push_back(Error(ERROR, msg, *p.filename, p.line, p.column))
@@ -38,10 +59,15 @@ namespace tac
 				  m_frame_start(0),
 				  mp_frame_reg(0),
 				  mp_stack_reg(
-						  new Symbol(new std::string("$s"), location(), Symbol::TEMP, new Type(Type::ADDR)))
+						  new Symbol(new std::string("$s"), location(), Symbol::TEMP, new Type(Type::ADDR))),
+				  mp_pc_reg(
+						  new Symbol(new std::string("$pc"), location(), Symbol::TEMP, new Type(Type::ADDR))),
+				  mp_ra_reg(0)
 	{
 		mp_frame_reg = new Symbol(new std::string("$f"), location(), Symbol::TEMP, new Type(Type::ADDR));
-		mp_frame_reg->value.addrval = mp_stack_reg->value.addrval = 0;
+		mp_ra_reg = new Symbol(new std::string("$ra"), location(), Symbol::TEMP, new Type(Type::ADDR));
+		mp_ra_reg->value.addrval = mp_frame_reg->value.addrval = mp_stack_reg->value.addrval = 0;
+		mp_pc_reg->value.addrval = mp_interpreter->m_program_counter;
 	}
 
 	Interpreter::Context::Context(const location &loc, Context *parent, uint return_address, uint param_count)
@@ -51,13 +77,18 @@ namespace tac
 			  m_return_address(return_address),
 			  m_frame_start(parent->mp_stack->size() - param_count),
 			  mp_frame_reg(0),
-			  mp_stack_reg(parent->mp_stack_reg)
+			  mp_stack_reg(parent->mp_stack_reg),
+			  mp_pc_reg(parent->mp_pc_reg),
+			  mp_ra_reg(0)
 	{
 		if (param_count > mp_stack->size())
 			throw TACExecutionException(loc.begin, "number of parameters incompatible with stack size");
 
 		mp_frame_reg = new Symbol(new std::string("$f"), location(), Symbol::TEMP, new Type(Type::ADDR));
 		mp_frame_reg->value.addrval = m_frame_start;
+
+		mp_ra_reg = new Symbol(new std::string("$ra"), location(), Symbol::TEMP, new Type(Type::ADDR));
+		mp_ra_reg->value.addrval = m_return_address;
 	}
 
 	Interpreter::Context::~Context()
@@ -93,6 +124,24 @@ namespace tac
 		return mp_stack_reg;
 	}
 
+	Symbol* Interpreter::Context::get_pc_reg()
+	{
+		mp_pc_reg->type->kind = Type::ADDR;
+		mp_pc_reg->type->array_size = 0;
+		mp_pc_reg->value.addrval = mp_interpreter->m_program_counter;
+
+		return mp_pc_reg;
+	}
+
+	Symbol* Interpreter::Context::get_ra_reg()
+	{
+		mp_ra_reg->type->kind = Type::ADDR;
+		mp_ra_reg->type->array_size = 0;
+		mp_ra_reg->value.addrval = m_return_address;
+
+		return mp_ra_reg;
+	}
+
 	Interpreter::Context* Interpreter::Context::new_child(
 			const location &loc,
 			uint return_address,
@@ -121,6 +170,12 @@ namespace tac
 
 		if (id == STACK_REG_CODE)
 			return get_stack_reg();
+
+		if (id == PC_REG_CODE)
+			return get_pc_reg();
+
+		if (id == RA_REG_CODE)
+			return get_ra_reg();
 
 		while (id >= m_temps.size())
 			m_temps.push_back(new Symbol(0, loc, Symbol::VAR, new Type(Type::INT)));
@@ -176,12 +231,16 @@ namespace tac
 
 	const uint Interpreter::STACK_REG_CODE = 0x400;
 	const uint Interpreter::FRAME_REG_CODE = 0x401;
-	const uint Interpreter::STACK_BASE = 0xFFFFFF;
+	const uint Interpreter::PC_REG_CODE = 0x402;
+	const uint Interpreter::RA_REG_CODE = 0x403;
+	const uint Interpreter::STACK_BASE = 0x55555555;
+	const uint Interpreter::DYN_BASE = 0xAAAAAAAA;
 
 	Interpreter::Interpreter(uint8_t opts)
 		: m_options(opts),
 		  mp_scanner(0),
 		  mp_table(0),
+		  mp_memmngr(0),
 		  mp_parser(0),
 		  mp_context(0),
 		  m_code_start(0),
@@ -191,6 +250,7 @@ namespace tac
 	{
 		delete mp_scanner;
 		delete mp_table;
+		delete mp_memmngr;
 		delete mp_parser;
 		delete mp_context;
 	}
@@ -211,7 +271,10 @@ namespace tac
 		mp_scanner = new Scanner(&in_file);
 
 		delete (mp_table);
-		mp_table = new SymbolTable();
+		mp_table = new SymbolTable(0x55555555);
+
+		delete (mp_memmngr);
+		mp_memmngr = new MemoryManager(0x55555555);
 
 		delete (mp_parser);
 		mp_parser = new Parser(*mp_scanner, mp_table, unsolved, m_code_start, in, errors);
@@ -316,6 +379,8 @@ namespace tac
 
 		if (m_options & VERBOSE)
 			std::cout << "running..." << std::endl;
+
+		srand(time(0));
 
 		/* Creates root context. */
 		mp_context = new Context(this);
@@ -629,6 +694,10 @@ namespace tac
 		case Instruction::SHR:
 			set_ival(target, i.loc, get_ival(op1, i.loc) >> get_ival(op2, i.loc));
 			break;
+
+		case Instruction::MOD:
+			set_ival(target, i.loc, get_ival(op1, i.loc) % get_ival(op2, i.loc));
+			break;
 		}
 
 		if (target.kind == Symbol::TEMP)
@@ -755,16 +824,9 @@ namespace tac
 		}
 
 
-		// Writes value at target
-		if (tgt_mode == 0) //value
-		{
-			if (tgt_op.kind == Symbol::TEMP)
-				tgt_sym->type->kind = src_type;
-			else if (tgt_sym->type->kind != src_type)
-				warning(i.loc, "divergent type for target of move");
-			tgt_sym->value = field_to_sym_val(src_type, src_val);
-		}
-		else // 1-deref or 3-index
+		// Writes value at target.
+
+		if (tgt_mode != 0) // 1-deref or 3-index
 		{
 			if (get_type(tgt_op, i.loc) != Type::ADDR)
 				warning(i.loc, "dereferencing a non-pointer value");
@@ -776,8 +838,14 @@ namespace tac
 					warning(i.loc, "non-integer array index");
 				addr += get_ival(offset, i.loc);
 			}
-			get_symbol(addr, i.loc)->value = field_to_sym_val(src_type, src_val);
+			tgt_sym = get_symbol(addr, i.loc);
 		}
+
+		if (tgt_sym->kind == Symbol::TEMP)
+			tgt_sym->type->kind = src_type;
+		else if (tgt_sym->type->kind != src_type)
+			warning(i.loc, "divergent type for target of move");
+		tgt_sym->value = field_to_sym_val(src_type, src_val);
 
 		++m_program_counter;
 	}
@@ -860,6 +928,18 @@ namespace tac
 			mp_context->push(new_sym(target, i.loc));
 			break;
 
+		case Instruction::POP:
+			{
+				Symbol *src = mp_context->pop(i.loc);
+				Symbol *tgt_sym = get_symbol(target, i.loc);
+				if (target.kind == Symbol::TEMP)
+					tgt_sym->type->kind = src->type->kind;
+				else if (tgt_sym->type->kind != src->type->kind)
+					warning(i.loc, "divergent type for target symbol");
+				tgt_sym->value = src->value;
+			}
+			break;
+
 		case Instruction::PRINT:
 		case Instruction::PRINTLN:
 			if (target.solved)
@@ -884,17 +964,81 @@ namespace tac
 				std::cout << std::endl;
 			break;
 
-		case Instruction::POP:
+		case Instruction::SCANC:
 			{
-				Symbol *src = mp_context->pop(i.loc);
+				char num;
+				std::cin >> num;
 				Symbol *tgt_sym = get_symbol(target, i.loc);
 				if (target.kind == Symbol::TEMP)
-					tgt_sym->type->kind = src->type->kind;
-				else if (tgt_sym->type->kind != src->type->kind)
-					warning(i.loc, "divergent type for target of move");
-				tgt_sym->value = src->value;
-				break;
+					tgt_sym->type->kind = Type::CHAR;
+				else if (tgt_sym->type->kind != Type::CHAR)
+					warning(i.loc, "divergent type for target symbol");
+				tgt_sym->value.cval = num;
 			}
+			break;
+
+		case Instruction::SCANI:
+			{
+				int num;
+				std::cin >> num;
+				Symbol *tgt_sym = get_symbol(target, i.loc);
+				if (target.kind == Symbol::TEMP)
+					tgt_sym->type->kind = Type::INT;
+				else if (tgt_sym->type->kind != Type::INT)
+					warning(i.loc, "divergent type for target symbol");
+				tgt_sym->value.ival = num;
+			}
+			break;
+
+		case Instruction::SCANF:
+			{
+				float num;
+				std::cin >> num;
+				Symbol *tgt_sym = get_symbol(target, i.loc);
+				if (target.kind == Symbol::TEMP)
+					tgt_sym->type->kind = Type::FLOAT;
+				else if (tgt_sym->type->kind != Type::FLOAT)
+					warning(i.loc, "divergent type for target symbol");
+				tgt_sym->value.fval = num;
+			}
+			break;
+
+		case Instruction::MEMA:
+			{
+				Symbol *tgt_sym = get_symbol(target, i.loc);
+				if (target.kind == Symbol::TEMP)
+					tgt_sym->type->kind = Type::ADDR;
+				else if (tgt_sym->type->kind != Type::ADDR)
+					warning(i.loc, "divergent type for target symbol");
+
+				if (get_type(op, i.loc) != Type::INT)
+					warning(i.loc, "non-integer array index");
+				uint size = (uint) get_ival(op, i.loc);
+				uint addr;
+				tgt_sym->value.addrval =  (mp_memmngr->alloc(size, addr)) ? (addr + DYN_BASE) : 0;
+			}
+			break;
+
+		case Instruction::MEMF:
+			{
+				Type::Kind type = get_type(target, i.loc);
+				Field::Value v = get_val(target, i.loc);
+				if (type != Type::ADDR)
+					warning(i.loc, "trying to free a non-address value");
+				mp_memmngr->free(v.addrval - DYN_BASE);
+			}
+			break;
+
+		case Instruction::RAND:
+			{
+				Symbol *tgt_sym = get_symbol(target, i.loc);
+				if (target.kind == Symbol::TEMP)
+					tgt_sym->type->kind = Type::INT;
+				else if (tgt_sym->type->kind != Type::INT)
+					warning(i.loc, "divergent type for target symbol");
+				tgt_sym->value.ival = rand() % 2147483647;
+			}
+			break;
 		}
 	}
 
@@ -917,8 +1061,15 @@ namespace tac
 				throw TACExecutionException(loc.begin, "invalid address access");
 			return s;
 		}
-		else
+		else if (addr < DYN_BASE)
 			return mp_context->get(addr - STACK_BASE, loc);
+		else
+		{
+			const Symbol *s = mp_memmngr->get(addr - DYN_BASE);
+			if (!s)
+				throw TACExecutionException(loc.begin, "invalid address access");
+			return const_cast<Symbol*>(s);
+		}
 	}
 
 	uint Interpreter::get_addr(const Field &field, const location &loc)

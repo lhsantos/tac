@@ -1,10 +1,7 @@
 // Quicksort algorithm, as proposed by Cormen et. al
 .table
-int v[20] = {20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1}
-int size = 20
-
+int size
 .code
-
 // swaps two array elements
 swap:
 mov $0, #0[#1]
@@ -75,13 +72,10 @@ Q1:
 return
 
 main:
-// call quick(&v, 0, size - 1)
-mov $0, &v
-param $0
-param 0
-sub $0, size, 1
-param $0
-call quick, 3
+// read size
+println '?'
+scani size
+mema $3, size
 // $0 = 0, $1 = size - 1
 mov $0, 0
 sub $1, size, 1
@@ -89,9 +83,11 @@ sub $1, size, 1
 L1:
 slt $2, $0, size
 brz L2, $2
-// print v[$0]
-mov $2, &v
-mov $2, $2[$0]
+// v[$0] = rand
+rand $2
+mod $2, $2, 100
+mov $3[$0], $2
+// print $2
 print $2
 // if $0 < size - 1, print ", "
 slt $2, $0, $1
@@ -103,3 +99,30 @@ add $0, $0, 1
 jump L1 // loop
 L2:
 println
+// call quick(&v, 0, size - 1)
+param $3
+param 0
+sub $0, size, 1
+param $0
+call quick, 3
+// $0 = 0, $1 = size - 1
+mov $0, 0
+sub $1, size, 1
+// while $0 < size
+L4:
+slt $2, $0, size
+brz L5, $2
+// print v[$0]
+mov $2, $3[$0]
+print $2
+// if $0 < size - 1, print ", "
+slt $2, $0, $1
+brz L6, $2
+print ','
+print ' '
+L6:
+add $0, $0, 1
+jump L4 // loop
+L5:
+println
+memf $3

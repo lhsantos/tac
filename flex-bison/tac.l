@@ -62,14 +62,15 @@ WS  [ \t\v\f]
 "band"					{ yylloc->columns(yyleng); return token::BAND; }
 "bor"					{ yylloc->columns(yyleng); return token::BOR; }
 "bxor"					{ yylloc->columns(yyleng); return token::BXOR; }
+"bnot"					{ yylloc->columns(yyleng); return token::BNOT; }
 "shl"					{ yylloc->columns(yyleng); return token::SHL; }
 "shr"					{ yylloc->columns(yyleng); return token::SHR; }
+"mod"					{ yylloc->columns(yyleng); return token::MOD; }
 "seq"					{ yylloc->columns(yyleng); return token::SEQ; }
 "slt"					{ yylloc->columns(yyleng); return token::SLT; }
 "sleq"					{ yylloc->columns(yyleng); return token::SLEQ; }
 "minus"					{ yylloc->columns(yyleng); return token::MINUS; }
 "not"					{ yylloc->columns(yyleng); return token::NOT; }
-"bnot"					{ yylloc->columns(yyleng); return token::BNOT; }
 "chtoint"				{ yylloc->columns(yyleng); return token::CHTOINT; }
 "chtofl"				{ yylloc->columns(yyleng); return token::CHTOFL; }
 "inttofl"				{ yylloc->columns(yyleng); return token::INTTOFL; }
@@ -82,7 +83,13 @@ WS  [ \t\v\f]
 "jump"					{ yylloc->columns(yyleng); return token::JUMP; }
 "param"					{ yylloc->columns(yyleng); return token::PARAM; }
 "print"					{ yylloc->columns(yyleng); return token::PRINT; }
-"println"					{ yylloc->columns(yyleng); return token::PRINTLN; }
+"println"				{ yylloc->columns(yyleng); return token::PRINTLN; }
+"scanc"					{ yylloc->columns(yyleng); return token::SCANC; }
+"scani"					{ yylloc->columns(yyleng); return token::SCANI; }
+"scanf"					{ yylloc->columns(yyleng); return token::SCANF; }
+"mema"					{ yylloc->columns(yyleng); return token::MEMA; }
+"memf"					{ yylloc->columns(yyleng); return token::MEMF; }
+"rand"					{ yylloc->columns(yyleng); return token::RAND; }
 "call"					{ yylloc->columns(yyleng); return token::CALL; }
 "return"				{ yylloc->columns(yyleng); return token::RETURN; }
 "push"					{ yylloc->columns(yyleng); return token::PUSH; }
@@ -93,6 +100,8 @@ WS  [ \t\v\f]
 "$"{D}+						{ yylloc->columns(yyleng); yylval->ival = strtol(yytext + 1, 0, 10); return token::TEMPORARY; }
 "$s"						{ yylloc->columns(yyleng); yylval->ival = Interpreter::STACK_REG_CODE; return token::SP_TEMPORARY; }
 "$f"						{ yylloc->columns(yyleng); yylval->ival = Interpreter::FRAME_REG_CODE; return token::SP_TEMPORARY; }
+"$pc"						{ yylloc->columns(yyleng); yylval->ival = Interpreter::PC_REG_CODE; return token::SP_TEMPORARY; }
+"$ra"						{ yylloc->columns(yyleng); yylval->ival = Interpreter::RA_REG_CODE; return token::SP_TEMPORARY; }
 "#"{D}+						{ yylloc->columns(yyleng); yylval->ival = strtol(yytext + 1, 0, 10); return token::PARAMETER; }
 
 {HP}{H}+{IS}?				{ yylloc->columns(yyleng); yylval->ival = strtol(yytext, 0, 16); return token::I_CONSTANT; }

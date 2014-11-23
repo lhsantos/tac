@@ -1,307 +1,138 @@
+/*
+Copyright 2014 Luciano Henrique de Oliveira Santos
+
+This file is part of TAC project.
+
+TAC project is licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 /**
  * @file table.cpp
  *
- * @date 10/10/2014
+ * @date 2014-10-10
+ *
  * @author Luciano Santos
  */
 
-#include <cstdio>
-#include <cstring>
 #include <sstream>
 #include <iomanip>
-#include <set>
 
 #include "table.hpp"
 
+
 namespace tac {
-	Type::Type(const Type& other)
-			: kind(other.kind),
-			  array_size(other.array_size) { }
+	SymbolTable::SymbolTable(uint size)
+		: m_memmngr(size) { }
 
-	Type::Type(Type::Kind kind, size_t array_size)
-			: kind(kind),
-			  array_size(array_size) { }
+	SymbolTable::~SymbolTable() {
+		for (auto p : m_labels)
+			delete p.second;
+	}
 
-	Type::~Type() { }
-
-	std::string Type::to_str() const
+	bool SymbolTable::put(Symbol* symbol)
 	{
-		std::ostringstream sstream;
-
-		switch (kind)
-		{
-		case INT:
-			sstream << "int";
-			break;
-
-		case CHAR:
-			sstream << "char";
-			break;
-
-		case FLOAT:
-			sstream << "float";
-			break;
-
-		case ADDR:
-			sstream << "addr";
-			break;
-		}
-
-		if (array_size)
-		{
-			sstream << "[";
-			sstream << array_size;
-			sstream << "]";
-		}
-
-		return sstream.str();
-	}
-
-
-
-	Symbol::Symbol(const std::string* id, const location &loc, Kind kind, Type* type)
-			: id(id),
-			  kind(kind),
-			  type(type), registered(false),
-			  loc(loc)
-	{
-		memset(&value, 0, sizeof(value));
-	}
-
-	Symbol::Symbol(const Symbol& other)
-			: id(0),
-			  kind(other.kind),
-			  type(0),
-			  value(other.value),
-			  registered(other.registered),
-			  loc(other.loc)
-	{
-		if (other.id)
-			this->id = new std::string(*other.id);
-
-		if (other.type)
-		{
-			this->type = new Type(*other.type);
-			if (other.type->array_size)
-			{
-				this->value.arrval = new std::vector<Symbol*>();
-				this->value.arrval->reserve(other.value.arrval->size());
-				for (std::vector<Symbol*>::iterator i = this->value.arrval->begin(); i != this->value.arrval->end(); ++i)
-					this->value.arrval->push_back(new Symbol(**i));
-			}
-		}
-	}
-
-	Symbol::~Symbol()
-	{
-		delete id;
-		if ((type) && (type->array_size) && (value.arrval))
-		{
-			for (std::vector<Symbol*>::iterator i = value.arrval->begin(); i != value.arrval->end(); ++i)
-				delete (*i);
-		}
-		delete type;
-	}
-
-	static void printval(std::ostringstream &s, Symbol::Value v, Type *t) {
-		switch (t->kind)
-		{
-		case Type::INT:
-			s << v.ival;
-			break;
-
-		case Type::CHAR:
-			s << "'";
-			if (v.cval < 32)
-				s << "\\" << (int) v.cval;
-			else
-				s << v.cval;
-			s << "'";
-			break;
-
-		case Type::FLOAT:
-			s << v.fval;
-			break;
-
-		case Type::ADDR:
-			s << v.addrval;
-			break;
-		}
-	}
-
-	std::string Symbol::to_str() const
-	{
-		std::ostringstream s;
-
-		switch (kind)
-		{
-		case LABEL:
-			s << "label";
-			break;
-
-		case VAR:
-			s << "var";
-			break;
-
-		case CONST:
-			s << "const";
-			break;
-
-		case TEMP:
-			s << "temp";
-			break;
-
-		case PARAM:
-			s << "param";
-			break;
-		}
-
-		if (id)
-			s << " " << *id;
-
-		if (type)
-		{
-			s << ": " << type->to_str() << " ";
-
-			if (type->array_size)
-			{
-				s << '[';
-				for (size_t i = 0; i < type->array_size - 1; ++i)
-				{
-					printval(s, value.arrval->at(i)->value, value.arrval->at(i)->type);
-					s << ", ";
-				}
-				printval(s, value.arrval->back()->value, value.arrval->back()->type);
-				s << ']';
-			}
-			else
-				printval(s, value, type);
-		}
-
-		if ((kind == PARAM) || (kind == TEMP))
-			s << " " << value.addrval;
-
-		return s.str();
-	}
-
-
-
-	SymbolTable::AddressedElement::AddressedElement(const Symbol* symbol, uint base, size_t size)
-		: symbol(symbol), base(base), size(size) { }
-
-	uint SymbolTable::AddressedElement::next_addr() const
-	{
-		return base + size;
-	}
-
-	SymbolTable::SymbolTable()
-		: m_last_var_index(-1) { }
-
-	SymbolTable::~SymbolTable()
-	{
-		addr_list_t::iterator i;
-		for (i = m_list.begin(); i != m_list.end(); ++i)
-			delete i->symbol;
-	}
-
-	void SymbolTable::end_var_section() {
-		m_last_var_index = m_list.size() - 1;
-	}
-
-	void SymbolTable::put(Symbol* symbol)
-	{
-		size_t size = ((symbol->type && symbol->type->array_size) ? symbol->type->array_size : 1);
 		if (symbol->kind == Symbol::LABEL)
-			size = 0;
-
-		map_t::iterator i = m_table.find(*symbol->id);
-		if (i == m_table.end())
 		{
-			i = m_table.insert(pair_t(*symbol->id, m_list.size())).first;
-			m_list.push_back(AddressedElement(symbol, m_list.empty() ? 0 : m_list.back().next_addr(), size));
+			auto i = m_labels.find(*symbol->id);
+			if (i == m_labels.end())
+				m_labels[*symbol->id] = symbol;
+			else
+			{
+				if (i->second != symbol)
+					delete i->second;
+				i->second = symbol;
+			}
 		}
 		else
 		{
-			AddressedElement &e = m_list[i->second];
-			if (e.symbol != symbol)
+			uint addr;
+			map_t::iterator i = m_table.find(*symbol->id);
+			if (i == m_table.end())
 			{
-				delete e.symbol;
-				e.symbol = symbol;
+				if (!m_memmngr.put(symbol, addr))
+					return false;
+				m_table[*symbol->id] = addr;
 			}
-			e.size = size;
+			else
+			{
+				addr = i->second;
+				const Symbol *old = m_memmngr.get_block(addr);
+				if (old != symbol)
+				{
+					m_memmngr.free(addr);
+					if (!m_memmngr.put(symbol, addr))
+						return false;
+				}
+				i->second = addr;
+			}
 		}
 
-		for (uint k = i->second + 1; k < m_list.size(); ++k)
-			m_list[k].base = m_list[k - 1].next_addr();
-
 		symbol->registered = true;
+		return true;
 	}
 
 	const Symbol* SymbolTable::get(const std::string& id) const
 	{
-		map_t::const_iterator i = m_table.find(id);
-		return (i == m_table.end()) ? 0 : m_list[i->second].symbol;
+		auto i = m_labels.find(id);
+		if (i != m_labels.end())
+			return i->second;
+		else
+		{
+			auto j = m_table.find(id);
+			return (j == m_table.end()) ? nullptr : m_memmngr.get_block(j->second);
+		}
 	}
 
 	uint SymbolTable::get_addr(const std::string& id) const
 	{
 		map_t::const_iterator i = m_table.find(id);
-		return (i == m_table.end()) ? 0 : m_list[i->second].base;
+		return (i == m_table.end()) ? 0 : i->second;
 	}
 
 	const Symbol* SymbolTable::get(uint addr) const
 	{
-		int first = 0;
-		int last = m_last_var_index;
-		while (first <= last)
-		{
-			int m = (first + last) / 2;
-			if (addr < m_list[m].base)
-				last = m - 1;
-			else if (addr >= m_list[m].next_addr())
-				first = m + 1;
-			else
-			{
-				const Symbol *s = m_list[m].symbol;
-				if ((s->type) && (s->type->array_size))
-					return s->value.arrval->at(addr - m_list[m].base);
-				else if (addr == m_list[m].base)
-					return s;
-				return 0;
-			}
-		}
-		return 0;
+		return m_memmngr.get(addr);
 	}
 
-	uint SymbolTable::next_addr() const
+	uint SymbolTable::upper_bound() const
 	{
-		return m_list.empty() ? 0 : m_list.back().next_addr();
+		return m_memmngr.upper_bound();
 	}
 
 	void SymbolTable::show() const
 	{
-		for (addr_list_t::const_iterator i = m_list.begin(); i != m_list.end(); ++i)
+		for (auto s : m_memmngr.m_blocks)
 		{
 			std::cout << '[';
-			std::cout << std::noshowbase << std::hex << std::setw(6) << std::setfill('0') << (int) i->base;
+			std::cout << std::noshowbase << std::hex << std::setw(6) << std::setfill('0') << (int) s.base;
 			std::cout << ':';
-			std::cout << std::noshowbase << std::hex << std::setw(2) << std::setfill('0') << (int) i->size;
+			std::cout << std::noshowbase << std::hex << std::setw(2) << std::setfill('0') << (int) s.size;
 			std::cout << "] ";
-			std::cout << i->symbol->to_str() << std::endl;
+			std::cout << s.symbol->to_str() << std::endl;
 		}
 	}
 
 	std::string* SymbolTable::unique_id(float f)
 	{
-		char temp[22];
-		sprintf(temp, "%.9f", f);
-		return new std::string(temp);
+		std::ostringstream s;
+		s << std::setprecision(9) << f;
+		return new std::string(s.str());
 	}
 
 	std::string* SymbolTable::unique_id(int i)
 	{
-		char temp[12];
-		sprintf(temp, "%u", i);
-		return new std::string(temp);
+		std::ostringstream s;
+		s << i;
+		return new std::string(s.str());
 	}
 }
