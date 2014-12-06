@@ -178,7 +178,7 @@ namespace tac
 			return get_ra_reg();
 
 		while (id >= m_temps.size())
-			m_temps.push_back(new Symbol(0, loc, Symbol::VAR, new Type(Type::INT)));
+			m_temps.push_back(new Symbol(0, loc, Symbol::TEMP, new Type(Type::INT)));
 		return m_temps.at(id);
 	}
 
