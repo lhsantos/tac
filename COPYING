@@ -1,4 +1,6 @@
-Copyright 2014 Luciano Henrique de Oliveira Santos
+TAC - Three Address Code Interpreter
+
+Copyright (C) 2014-2015 Luciano Henrique de Oliveira Santos
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,9 +16,9 @@ limitations under the License.
 
 
 
-							 Apache License
-					   Version 2.0, January 2004
-					http://www.apache.org/licenses/
+		 Apache License
+	   Version 2.0, January 2004
+	http://www.apache.org/licenses/
 
 TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
 

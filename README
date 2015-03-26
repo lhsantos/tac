@@ -1,0 +1,18 @@
+TAC - the Three Address Code interpreter, is a simple, turing-complete
+utility to load and interpret a language specification based on the high
+level code found at the Dragon Book (Aho et al., 86), an intermediate
+code. This utility is intended to be used on a Compilers undergraduate
+level course. For more information, check tac.pdf at 'doc' dir (pt-br).
+
+TAC - o interpretador de Código de Três Endereços, é uma utilidade simples,
+turing-completa para carregar e interpretar uma especificação de linguagem
+baseada no código de alto nível descrito no Livro do Dragão (Aho et al., 86),
+um código intermediário. Esta utilidade foi projetada para ser utilizada em
+um curso de Compiladores no nível de graduação. Para mais informações,
+verifique o arquivo tac.pdf, no diretório 'doc'.
+
+Alfred V. Aho, Ravi Sethi, and Jeffrey D. Ullman.
+Compilers: Principles, Techniques, and Tools.
+Addison-Wesley Longman Publishing Co., Inc., Boston, MA, USA, 1986.
+ISBN 0-201-10088-6.
+

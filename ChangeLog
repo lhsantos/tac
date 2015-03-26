@@ -1,0 +1,12 @@
+- 2015-03-26
+* migration to autotools
+
+- 2014-12-05
+* bug fix
+
+- 2014-11-23
+* version 0.11: bug fixes, dynamic memory, cmd line options
+
+- 2014-10-26
+* first usable version
+

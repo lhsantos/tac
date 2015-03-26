@@ -137,18 +137,24 @@ Para compilar o TAC, são necessários os programas \textit{flex}, \textit{bison
 
 Após obter o código fonte por meio do \textit{site} ou via {\srcfont git}\footnote{http://git-scm.com/}, abra uma linha
 de comando no sistema operacional e mova o diretório corrente para a raiz do código fonte (onde estão os arquivos
-{\srcfont LICENSE} e {\srcfont Makefile}). Para compilar e gerar o executável do TAC, faça:
+{\srcfont COPYING} e {\srcfont configure}). Para compilar e gerar o executável do TAC, faça:
 
 \bigskip
-{\srcfont make all}
+{\srcfont
+./configure\\
+\indent make all
+}
 \bigskip
 
-Este comando vai criar (se não existirem) os subdiretórios {\srcfont obj} e {\srcfont bin}, gerar arquivos objeto
-intermediários em {\srcfont obj} e o executável final em {\srcfont bin}. Caso deseje apagar todos os arquivos gerados no
-processo de compilação, faça:
+Este comando vai compilar o executável final {\srcfont tac}. Caso deseje apagar todos os arquivos gerados no processo de compilação, faça:
 
 \bigskip
-{\srcfont make clean}
+{\srcfont make clean\\}
+
+Caso deseje apagar todos os arquivos gerados no processo de configuração, faça:
+
+\bigskip
+{\srcfont make distclean}
 
 
 \section{Linha de comando do TAC}

@@ -45,7 +45,6 @@ compile
 *.log
 *.status
 *.sub
-configure
 depcomp
 install-sh
 missing
