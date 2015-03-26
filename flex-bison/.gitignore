@@ -1,4 +1,10 @@
 *.cpp
+*.cc
 *.hh
 *.hpp
 *.output
+.deps/
+.dirstamp
+*~
+
+

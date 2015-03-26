@@ -37,7 +37,6 @@ limitations under the License.
 #include "scanner.hpp"
 #include "table.hpp"
 #include "memmngr.hpp"
-#include "parser.hpp"
 #include "instruction.hpp"
 
 

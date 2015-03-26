@@ -32,7 +32,7 @@ limitations under the License.
 #include <string>
 #include <list>
 
-#include "parser.hpp"
+#include "tac.hh"
 
 #if !defined(yyFlexLexerOnce)
 #include <FlexLexer.h>

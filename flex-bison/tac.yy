@@ -3,8 +3,8 @@
 %error-verbose
 %defines
 %locations
-%define namespace "tac"
-%define parser_class_name "Parser"
+%define api.namespace {tac}
+%define parser_class_name {Parser}
 
 %code requires {
 	#include <utility>
