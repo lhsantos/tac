@@ -35,19 +35,13 @@
 /.settings
 
 *~
-INSTALL
 Makefile
-*.in
 aclocal.m4
 autom4te.cache/
 compile
-*.guess
 *.log
-*.status
-*.sub
 depcomp
-install-sh
-missing
 ylwrap
 tac
+*.status
 
