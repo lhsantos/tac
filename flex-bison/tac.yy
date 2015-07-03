@@ -73,6 +73,7 @@
 %type <symbol> arr_size
 %type <symbol_list> arr_constant
 %type <symbol_list> constant_list
+%type <symbol_list> label_list
 %type <symbol> label
 %type <instr_list> code_block
 %type <instr_list> instruction_list
@@ -372,22 +373,34 @@ instruction_list:
     
     | instruction_list instruction EOL
     {
-        $$ = $1;
-        $$->push_back($2);
-        ++g_program_counter;
+        if ($2)
+        {
+            $$ = $1;
+            $$->push_back($2);
+            ++g_program_counter;
+        }
     }
 ;
 
 
 instruction:
-    label cmd
+    label_list cmd
     {
-        $$ = 0;
-        if ($1)
-            $$ = $2;
+        $$ = $2;
+        if ($1); /* that's silly, but silly warnings are sillier... */
     }
+;
+
+
+label_list:
+    /* empty */
+    { $$ = 0; }
     
-    | cmd { $$ = $1; }
+    | label_list label
+    {
+        $$ = $1;
+        if ($2); /* that's silly, but silly warnings are sillier... */
+    }
 ;
 
 

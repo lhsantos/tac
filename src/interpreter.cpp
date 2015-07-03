@@ -366,7 +366,7 @@ namespace tac
         if (m_options & DEBUG)
         {
             std::cout << "------------- Symbols -------------" << std::endl;
-            mp_table->show();
+            mp_table->show(m_options & DLABELS);
             std::cout << "-------------- Code ---------------" << std::endl;
             uint k = m_code_start;
             for (std::vector<Instruction>::iterator i = m_program.begin(); i != m_program.end(); ++i, ++k)

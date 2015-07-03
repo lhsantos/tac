@@ -4,6 +4,7 @@ int n = 10
 fibonacci:
 nop
 fibonacci2:
+fibonacci3:
 slt $0, #0, 1 // if first parameter is less than 1, set $0 to 1, otherwise to 0
 brz L1, $0 // if $0 is zero, goto L1
 return 0

@@ -40,10 +40,11 @@ int main(const int argc, char **argv)
 {
     static struct option long_options[] =
     {
-        { "verbose", no_argument, 0, 'v' },
-        { "brief",   no_argument, 0, 'b' },
-        { "debug",   no_argument, 0, 'd' },
-        { "step",    no_argument, 0, 's' },
+        { "verbose",        no_argument, 0, 'v' },
+        { "brief",          no_argument, 0, 'b' },
+        { "debug",          no_argument, 0, 'd' },
+        { "step",           no_argument, 0, 's' },
+        { "show-labels",    no_argument, 0, 'l' },
         { 0, 0, 0, 0 }
     };
 
@@ -52,7 +53,7 @@ int main(const int argc, char **argv)
     uint8_t opts = 0;
 
     int c;
-    while ((c = getopt_long(argc, argv, "vbds", long_options, 0)) != -1)
+    while ((c = getopt_long(argc, argv, "vbdsl", long_options, 0)) != -1)
     {
         switch (c)
         {
@@ -61,6 +62,7 @@ int main(const int argc, char **argv)
         case 'b': opts &= (~Interpreter::VERBOSE); break;
         case 'd': opts |= Interpreter::DEBUG; break;
         case 's': opts |= Interpreter::STEP; break;
+        case 'l': opts |= Interpreter::DLABELS; break;
         case '?':
         default:
             std::cerr << "option '" << (char) optopt << "' is invalid: ignored" << std::endl;

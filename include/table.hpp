@@ -73,7 +73,7 @@ namespace tac
 
         uint upper_bound() const;
 
-        void show() const;
+        void show(bool) const;
 
         static std::string* unique_id(float);
 

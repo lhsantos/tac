@@ -111,7 +111,7 @@ namespace tac
         return m_memmngr.upper_bound();
     }
 
-    void SymbolTable::show() const
+    void SymbolTable::show(bool labels) const
     {
         for (auto s : m_memmngr.m_blocks)
         {
@@ -122,6 +122,15 @@ namespace tac
             std::cout << "] ";
             std::cout << s.symbol->to_str() << std::endl;
         }
+        
+        if (labels)
+            for (auto l : m_labels)
+            {
+                std::cout
+                        << l.first << ": "
+                        << std::noshowbase << std::hex << std::setw(6) << std::setfill('0') << (int) l.second->value.addrval
+                        << std::endl;
+            }
     }
 
     std::string* SymbolTable::unique_id(float f)

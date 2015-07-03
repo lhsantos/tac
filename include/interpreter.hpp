@@ -63,7 +63,8 @@ namespace tac
         {
             VERBOSE = 1,
             DEBUG = 2,
-            STEP = 4
+            STEP = 4,
+            DLABELS = 8
         };
 
         static const uint STACK_REG_CODE;
