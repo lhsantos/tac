@@ -73,8 +73,6 @@
 %type <symbol> arr_size
 %type <symbol_list> arr_constant
 %type <symbol_list> constant_list
-%type <symbol_list> label_list
-%type <symbol> label
 %type <instr_list> code_block
 %type <instr_list> instruction_list
 %type <instr> instruction
@@ -384,23 +382,13 @@ instruction_list:
 
 
 instruction:
-    label_list cmd
-    {
-        $$ = $2;
-        if ($1); /* that's silly, but silly warnings are sillier... */
-    }
+    label_list cmd { $$ = $2; }
 ;
 
 
 label_list:
     /* empty */
-    { $$ = 0; }
-    
     | label_list label
-    {
-        $$ = $1;
-        if ($2); /* that's silly, but silly warnings are sillier... */
-    }
 ;
 
 
@@ -410,13 +398,8 @@ label:
         Symbol *s = new Symbol($1, @1, Symbol::LABEL, new Type(Type::ADDR));
         s->value.addrval = g_program_counter;
         
-        if (register_symbol(s, errors))
-            $$ = s;
-        else
-        {
+        if (!register_symbol(s, errors))
             delete s;
-            $$ = 0;
-        }
     }
 ;
 
