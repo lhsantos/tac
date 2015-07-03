@@ -34,53 +34,53 @@ limitations under the License.
 
 namespace tac
 {
-	enum ErrorLevel
-	{
-		INFO,
-		WARNING,
-		ERROR
-	};
+    enum ErrorLevel
+    {
+        INFO,
+        WARNING,
+        ERROR
+    };
 
-	class Error
-	{
-	public:
-		Error(
-			ErrorLevel level,
-			const std::string& msg,
-			const std::string& file = "",
-			int line = 0,
-			int col = 0);
+    class Error
+    {
+    public:
+        Error(
+            ErrorLevel level,
+            const std::string& msg,
+            const std::string& file = "",
+            int line = 0,
+            int col = 0);
 
-		~Error();
+        ~Error();
 
-		ErrorLevel errorLevel() const;
+        ErrorLevel errorLevel() const;
 
-		void print(std::ostream&) const;
+        void print(std::ostream&) const;
 
-	private:
-		ErrorLevel level;
-		std::string msg;
-		std::string file;
-		int line;
-		int col;
-	};
-
-
-	class TACException : public std::exception
-	{
-	public:
-		TACException(const position&) throw();
-
-		virtual ~TACException() throw();
-
-		operator Error() const;
-
-		virtual const std::string msg() const = 0;
+    private:
+        ErrorLevel level;
+        std::string msg;
+        std::string file;
+        int line;
+        int col;
+    };
 
 
-	protected:
-		const position pos;
-	};
+    class TACException : public std::exception
+    {
+    public:
+        TACException(const position&) throw();
+
+        virtual ~TACException() throw();
+
+        operator Error() const;
+
+        virtual const std::string msg() const = 0;
+
+
+    protected:
+        const position pos;
+    };
 }
 
 #endif /* ERROR_HPP_ */

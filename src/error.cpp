@@ -30,60 +30,62 @@ limitations under the License.
 #include "error.hpp"
 
 
-namespace tac {
-	Error::Error(ErrorLevel level, const std::string &msg, const std::string &file, int line, int col)
-			: level(level), msg(msg), file(file), line(line), col(col) { }
+namespace tac
+{
+    Error::Error(ErrorLevel level, const std::string &msg, const std::string &file, int line, int col)
+            : level(level), msg(msg), file(file), line(line), col(col) { }
 
-	Error::~Error() { }
+    Error::~Error() { }
 
-	void Error::print(std::ostream& out) const
-	{
-		/* Prints the level of the error. */
-		switch (level)
-		{
-			case INFO:
-				out << "info:";
-				break;
+    void Error::print(std::ostream& out) const
+    {
+        /* Prints the level of the error. */
+        switch (level)
+        {
+            case INFO:
+                out << "info:";
+                break;
 
-			case WARNING:
-				out << "warning:";
-				break;
+            case WARNING:
+                out << "warning:";
+                break;
 
-			default:
-				out << "error:";
-				break;
-		}
+            default:
+                out << "error:";
+                break;
+        }
 
-		if (file.size() > 0)
-		{
-			out << " " << file.c_str();
-			if (line > 0)
-			{
-				out << "(" << line;
-				if (col > 0)
-					out << "," << col;
-				out << ")";
-			}
-			out << ":";
-		}
+        if (file.size() > 0)
+        {
+            out << " " << file.c_str();
+            if (line > 0)
+            {
+                out << "(" << line;
+                if (col > 0)
+                    out << "," << col;
+                out << ")";
+            }
+            out << ":";
+        }
 
-		out << " " << msg.c_str();
-	}
+        out << " " << msg.c_str();
+    }
 
-	ErrorLevel Error::errorLevel() const
-	{
-		return level;
-	}
-
-
+    ErrorLevel Error::errorLevel() const
+    {
+        return level;
+    }
 
 
-	TACException::TACException(const position& pos) throw()
-			: pos(pos) { }
 
-	TACException::~TACException() throw() { }
 
-	TACException::operator Error() const {
-		return Error(ERROR, msg(), *pos.filename, pos.line, pos.column);
-	}
+    TACException::TACException(const position& pos) throw()
+            : pos(pos) { }
+
+    TACException::~TACException() throw() { }
+
+    TACException::operator Error() const
+    {
+        return Error(ERROR, msg(), *pos.filename, pos.line, pos.column);
+    }
 }

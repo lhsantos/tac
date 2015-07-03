@@ -33,15 +33,14 @@
 /.project
 /Debug/
 /.settings
+/nbproject
 
 *~
 Makefile
 aclocal.m4
 autom4te.cache/
-compile
 *.log
 depcomp
-ylwrap
 tac
 *.status
 

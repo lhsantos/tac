@@ -40,26 +40,26 @@ limitations under the License.
 
 #undef  YY_DECL
 #define YY_DECL \
-	int tac::Scanner::yylex( \
-			tac::Parser::semantic_type* yylval, \
-			tac::Parser::location_type* yylloc)
+    int tac::Scanner::yylex( \
+            tac::Parser::semantic_type* yylval, \
+            tac::Parser::location_type* yylloc)
 
 namespace tac
 {
-	class Scanner: public yyFlexLexer
-	{
-	public:
-		Scanner(std::istream *in);
+    class Scanner: public yyFlexLexer
+    {
+    public:
+        Scanner(std::istream *in);
 
-		virtual ~Scanner();
+        virtual ~Scanner();
 
-		int yylex(
-				Parser::semantic_type *yylval,
-				Parser::location_type *yylloc);
+        int yylex(
+                Parser::semantic_type *yylval,
+                Parser::location_type *yylloc);
 
-	private:
-		std::list<char> m_buffer;
-	};
+    private:
+        std::list<char> m_buffer;
+    };
 }
 
 #endif /* SCANNER_HPP_ */

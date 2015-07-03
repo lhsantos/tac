@@ -42,155 +42,155 @@ limitations under the License.
 
 namespace tac
 {
-	class TACExecutionException : public TACException
-	{
-	public:
-		TACExecutionException(const position&, const std::string&) throw();
+    class TACExecutionException : public TACException
+    {
+    public:
+        TACExecutionException(const position&, const std::string&) throw();
 
-		virtual ~TACExecutionException() throw();
+        virtual ~TACExecutionException() throw();
 
-		virtual const std::string msg() const;
+        virtual const std::string msg() const;
 
-	private:
-		const std::string m_msg;
-	};
-
-
-	class Interpreter
-	{
-	public:
-		enum Options
-		{
-			VERBOSE = 1,
-			DEBUG = 2,
-			STEP = 4
-		};
-
-		static const uint STACK_REG_CODE;
-		static const uint FRAME_REG_CODE;
-		static const uint PC_REG_CODE;
-		static const uint RA_REG_CODE;
+    private:
+        const std::string m_msg;
+    };
 
 
-		Interpreter(uint8_t);
+    class Interpreter
+    {
+    public:
+        enum Options
+        {
+            VERBOSE = 1,
+            DEBUG = 2,
+            STEP = 4
+        };
 
-		~Interpreter();
-
-		void run(const char *in, std::list<Error>&);
-
-	private:
-		class Context
-		{
-		public:
-			Context(Interpreter *interpreter);
-
-			~Context();
-
-			Context* new_child(const location &loc, uint return_address, uint param_count);
-
-			Context* parent() const;
-
-			Symbol* get_param(uint, const location&) const;
-
-			Symbol* get_temp(uint, const location&);
-
-			Symbol* get(uint, const location&) const;
-
-			uint get_param_addr(uint, const location&) const;
-
-			uint return_address() const;
-
-			void push(Symbol *s);
-
-			Symbol* pop(const location&);
-
-			void pop_frame();
+        static const uint STACK_REG_CODE;
+        static const uint FRAME_REG_CODE;
+        static const uint PC_REG_CODE;
+        static const uint RA_REG_CODE;
 
 
-		private:
-			Interpreter *mp_interpreter;
-			Context *mp_parent;
-			std::vector<Symbol*> *mp_stack;
-			uint m_return_address;
-			uint m_frame_start;
-			std::vector<Symbol*> m_temps;
-			Symbol *mp_frame_reg;
-			Symbol *mp_stack_reg;
-			Symbol *mp_pc_reg;
-			Symbol *mp_ra_reg;
+        Interpreter(uint8_t);
 
-			Context(const location&, Context*, uint, uint);
+        ~Interpreter();
 
-			Symbol* get_frame_reg();
+        void run(const char *in, std::list<Error>&);
 
-			Symbol* get_stack_reg();
+    private:
+        class Context
+        {
+        public:
+            Context(Interpreter *interpreter);
 
-			Symbol* get_pc_reg();
+            ~Context();
 
-			Symbol* get_ra_reg();
-		};
+            Context* new_child(const location &loc, uint return_address, uint param_count);
 
+            Context* parent() const;
 
-		static const uint STACK_BASE;
-		static const uint DYN_BASE;
+            Symbol* get_param(uint, const location&) const;
 
-		uint8_t m_options;
-		Scanner *mp_scanner;
-		SymbolTable *mp_table;
-		MemoryManager *mp_memmngr;
-		Parser *mp_parser;
-		std::vector<Instruction> m_program;
-		Context *mp_context;
-		uint m_code_start;
-		uint m_program_counter;
+            Symbol* get_temp(uint, const location&);
+
+            Symbol* get(uint, const location&) const;
+
+            uint get_param_addr(uint, const location&) const;
+
+            uint return_address() const;
+
+            void push(Symbol *s);
+
+            Symbol* pop(const location&);
+
+            void pop_frame();
 
 
-		bool compile(std::vector<Instruction*>*, std::list<Error>&);
+        private:
+            Interpreter *mp_interpreter;
+            Context *mp_parent;
+            std::vector<Symbol*> *mp_stack;
+            uint m_return_address;
+            uint m_frame_start;
+            std::vector<Symbol*> m_temps;
+            Symbol *mp_frame_reg;
+            Symbol *mp_stack_reg;
+            Symbol *mp_pc_reg;
+            Symbol *mp_ra_reg;
 
-		bool solve(Instruction*, std::list<Error>&);
+            Context(const location&, Context*, uint, uint);
 
-		void execute();
+            Symbol* get_frame_reg();
 
-		void warning(const location&, const std::string&);
+            Symbol* get_stack_reg();
 
-		void general_logic_arithmetic(const Instruction&);
+            Symbol* get_pc_reg();
 
-		void integer_logic_arithmetic(const Instruction&);
+            Symbol* get_ra_reg();
+        };
 
-		void casting(const Instruction&);
 
-		void move(const Instruction&);
+        static const uint STACK_BASE;
+        static const uint DYN_BASE;
 
-		void branch_and_function(const Instruction&);
+        uint8_t m_options;
+        Scanner *mp_scanner;
+        SymbolTable *mp_table;
+        MemoryManager *mp_memmngr;
+        Parser *mp_parser;
+        std::vector<Instruction> m_program;
+        Context *mp_context;
+        uint m_code_start;
+        uint m_program_counter;
 
-		Symbol* get_symbol(const Field&, const location&);
 
-		Symbol* get_symbol(uint, const location&);
+        bool compile(std::vector<Instruction*>*, std::list<Error>&);
 
-		uint get_addr(const Field&, const location&);
+        bool solve(Instruction*, std::list<Error>&);
 
-		Type::Kind get_type(const Field&, const location&);
+        void execute();
 
-		Field::Value get_val(const Field&, const location&);
+        void warning(const location&, const std::string&);
 
-		char get_cval(const Field&, const location&);
+        void general_logic_arithmetic(const Instruction&);
 
-		int get_ival(const Field&, const location&);
+        void integer_logic_arithmetic(const Instruction&);
 
-		float get_fval(const Field&, const location&);
+        void casting(const Instruction&);
 
-		void set_cval(const Field&, const location&, char v);
+        void move(const Instruction&);
 
-		void set_ival(const Field&, const location&, int v);
+        void branch_and_function(const Instruction&);
 
-		void set_fval(const Field&, const location&, float v);
+        Symbol* get_symbol(const Field&, const location&);
 
-		Symbol* new_sym(const Field&, const location&);
+        Symbol* get_symbol(uint, const location&);
 
-		static Field::Value sym_to_field_val(Symbol*);
+        uint get_addr(const Field&, const location&);
 
-		static Symbol::Value field_to_sym_val(Type::Kind, Field::Value);
-	};
+        Type::Kind get_type(const Field&, const location&);
+
+        Field::Value get_val(const Field&, const location&);
+
+        char get_cval(const Field&, const location&);
+
+        int get_ival(const Field&, const location&);
+
+        float get_fval(const Field&, const location&);
+
+        void set_cval(const Field&, const location&, char v);
+
+        void set_ival(const Field&, const location&, int v);
+
+        void set_fval(const Field&, const location&, float v);
+
+        Symbol* new_sym(const Field&, const location&);
+
+        static Field::Value sym_to_field_val(Symbol*);
+
+        static Symbol::Value field_to_sym_val(Type::Kind, Field::Value);
+    };
 }
 
 #endif /* INTERPRETER_HPP_ */

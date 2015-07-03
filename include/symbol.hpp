@@ -35,101 +35,101 @@ limitations under the License.
 
 namespace tac
 {
-	struct Type
-	{
-	public:
-		enum Kind
-		{
-			CHAR  = 0,
-			INT   = 1,
-			FLOAT = 2,
-			ADDR  = 3
-		};
+    struct Type
+    {
+    public:
+        enum Kind
+        {
+            CHAR  = 0,
+            INT   = 1,
+            FLOAT = 2,
+            ADDR  = 3
+        };
 
-		Kind kind; // the language type
-		size_t array_size;
+        Kind kind; // the language type
+        size_t array_size;
 
-		/**
-		 * @brief Creates a copy of a type.
-		 *
-		 * The pointee will be duplicated, i.e., a newly created object will be associated to this type,
-		 * so both objects can be destroyed independently.
-		 *
-		 * @param other
-		 */
-		Type(const Type& other);
+        /**
+         * @brief Creates a copy of a type.
+         *
+         * The pointee will be duplicated, i.e., a newly created object will be associated to this type,
+         * so both objects can be destroyed independently.
+         *
+         * @param other
+         */
+        Type(const Type& other);
 
-		/**
-		 * @brief Creates a new type descriptor, with given values.
-		 *
-		 * The name string will not be destroyed, the pointee will, even if it was allocated outside this class.
-		 *
-		 * @param kind
-		 * @param constant
-		 * @param pointee
-		 * @param array_size
-		 */
-		Type(Kind kind, size_t array_size = 0);
+        /**
+         * @brief Creates a new type descriptor, with given values.
+         *
+         * The name string will not be destroyed, the pointee will, even if it was allocated outside this class.
+         *
+         * @param kind
+         * @param constant
+         * @param pointee
+         * @param array_size
+         */
+        Type(Kind kind, size_t array_size = 0);
 
-		/**
-		 * @brief Destroys this type, and recursively destroys its pointee.
-		 */
-		~Type();
+        /**
+         * @brief Destroys this type, and recursively destroys its pointee.
+         */
+        ~Type();
 
-		std::string to_str() const;
+        std::string to_str() const;
 
-	private:
-		void init(const Type& other);
-	};
-
-
-	struct Symbol
-	{
-	public:
-		enum Kind
-		{
-			LABEL,
-			VAR,
-			CONST,
-			TEMP,
-			PARAM
-		};
-
-		union Value
-		{
-			uint addrval;
-			int ival;
-			char cval;
-			float fval;
-			std::vector<Symbol*>* arrval;
-		};
-
-		const std::string *id;
-		Kind kind; // table entry type of this symbol
-		Type *type; // type of this symbol
-		Value value; // value of this symbol
-		bool registered;
-		location loc;
+    private:
+        void init(const Type& other);
+    };
 
 
-		/**
-		 * @brief Creates a new symbol.
-		 *
-		 * Note that id and type are created elsewhere, but will be destroyed when this symbol is destroyed.
-		 *
-		 * @param id
-		 * @param kind
-		 * @param type
-		 * @param args
-		 */
-		Symbol(const std::string*, const location&, Kind, Type* type = 0);
+    struct Symbol
+    {
+    public:
+        enum Kind
+        {
+            LABEL,
+            VAR,
+            CONST,
+            TEMP,
+            PARAM
+        };
 
-		explicit Symbol(const Symbol&);
+        union Value
+        {
+            uint addrval;
+            int ival;
+            char cval;
+            float fval;
+            std::vector<Symbol*>* arrval;
+        };
 
-		~Symbol();
+        const std::string *id;
+        Kind kind; // table entry type of this symbol
+        Type *type; // type of this symbol
+        Value value; // value of this symbol
+        bool registered;
+        location loc;
 
-		std::string to_str() const;
-	};
+
+        /**
+         * @brief Creates a new symbol.
+         *
+         * Note that id and type are created elsewhere, but will be destroyed when this symbol is destroyed.
+         *
+         * @param id
+         * @param kind
+         * @param type
+         * @param args
+         */
+        Symbol(const std::string*, const location&, Kind, Type* type = 0);
+
+        explicit Symbol(const Symbol&);
+
+        ~Symbol();
+
+        std::string to_str() const;
+    };
 }
 
 #endif /* INCLUDE_SYMBOL_HPP_ */

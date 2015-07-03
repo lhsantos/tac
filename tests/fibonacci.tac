@@ -2,6 +2,8 @@
 int n = 10
 .code
 fibonacci:
+nop
+fibonacci2:
 slt $0, #0, 1 // if first parameter is less than 1, set $0 to 1, otherwise to 0
 brz L1, $0 // if $0 is zero, goto L1
 return 0
@@ -24,6 +26,7 @@ pop $1 // get result on $1
 add $0, $0, $1
 return $0
 main:
+nop
 param n
 call fibonacci, 1
 pop $0

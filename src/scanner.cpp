@@ -27,8 +27,9 @@ limitations under the License.
 #include "scanner.hpp"
 #include <cstdio>
 
-namespace tac {
-	Scanner::Scanner(std::istream *in) : yyFlexLexer(in, 0) { }
+namespace tac
+{
+    Scanner::Scanner(std::istream *in) : yyFlexLexer(in, 0) { }
 
-	Scanner::~Scanner() { }
+    Scanner::~Scanner() { }
 }

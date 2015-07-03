@@ -34,62 +34,62 @@ limitations under the License.
 
 namespace tac
 {
-	class SymbolTable
-	{
-	public:
-		/**
-		 * @brief Creates a new symbol table.
-		 *
-		 * @param max_size the maximum number of symbols this table can hold.
-		 */
-		SymbolTable(uint max_size);
+    class SymbolTable
+    {
+    public:
+        /**
+         * @brief Creates a new symbol table.
+         *
+         * @param max_size the maximum number of symbols this table can hold.
+         */
+        SymbolTable(uint max_size);
 
-		~SymbolTable();
+        ~SymbolTable();
 
-		/**
-		 * @brief Inserts or updates a symbol in the table.
-		 *
-		 * If the old symbol is different than the new symbol, the old symbol is deleted.
-		 * This symbol will be marked as registered.
-		 *
-		 * @param s the symbol to be inserted.
-		 *
-		 * @return true, if the symbol was successfully inserted; false otherwise.
-		 */
-		bool put(Symbol *s);
+        /**
+         * @brief Inserts or updates a symbol in the table.
+         *
+         * If the old symbol is different than the new symbol, the old symbol is deleted.
+         * This symbol will be marked as registered.
+         *
+         * @param s the symbol to be inserted.
+         *
+         * @return true, if the symbol was successfully inserted; false otherwise.
+         */
+        bool put(Symbol *s);
 
-		/**
-		 * @brief Looks up for a symbol in the table.
-		 *
-		 * @param id The symbol unique id.
-		 *
-		 * @return A pointer to the symbol or null, if it's not found.
-		 */
-		const Symbol* get(const std::string& id) const;
+        /**
+         * @brief Looks up for a symbol in the table.
+         *
+         * @param id The symbol unique id.
+         *
+         * @return A pointer to the symbol or null, if it's not found.
+         */
+        const Symbol* get(const std::string& id) const;
 
-		uint get_addr(const std::string& id) const;
+        uint get_addr(const std::string& id) const;
 
-		const Symbol* get(uint) const;
+        const Symbol* get(uint) const;
 
-		uint upper_bound() const;
+        uint upper_bound() const;
 
-		void show() const;
+        void show() const;
 
-		static std::string* unique_id(float);
+        static std::string* unique_id(float);
 
-		static std::string* unique_id(int);
+        static std::string* unique_id(int);
 
 
-	private:
-		typedef std::map<std::string, uint> map_t;
-		typedef std::map<std::string, const Symbol*> label_map_t;
+    private:
+        typedef std::map<std::string, uint> map_t;
+        typedef std::map<std::string, const Symbol*> label_map_t;
 
-		map_t m_table;
-		label_map_t m_labels;
-		MemoryManager m_memmngr;
+        map_t m_table;
+        label_map_t m_labels;
+        MemoryManager m_memmngr;
 
-		SymbolTable(const SymbolTable&);
-	};
+        SymbolTable(const SymbolTable&);
+    };
 }
 
 #endif /* TABLE_HPP_ */
