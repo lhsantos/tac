@@ -1,10 +1,10 @@
 %skeleton "lalr1.cc"
 %debug
-%error-verbose
+%define parse.error verbose
 %defines
 %locations
 %define api.namespace {tac}
-%define parser_class_name {Parser}
+%define api.parser.class {Parser}
 
 %code requires
 {
